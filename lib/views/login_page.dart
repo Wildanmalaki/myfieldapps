@@ -120,7 +120,7 @@ class _LoginPage extends State<LoginPage> {
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xff007E6E),
+                        backgroundColor: Color.fromARGB(255, 24, 64, 160),
                         padding: EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),

@@ -169,7 +169,7 @@ class _PendaftaranUserState extends State<PendaftaranUser> {
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xff007E6E),
+                    backgroundColor: Color.fromARGB(255, 48, 89, 187),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
