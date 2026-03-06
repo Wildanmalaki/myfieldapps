@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 class HomePage extends StatefulWidget {
-    
   const HomePage({super.key});
 
   @override
@@ -9,11 +9,11 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-    
-
-    
-
   int selectedCategory = 0;
+
+  final PageController _pageController = PageController(viewportFraction: 0.8);
+  int _currentPage = 0;
+  Timer? timer;
 
   final List<String> categories = [
     "Sepak bola",
@@ -23,99 +23,128 @@ class _HomePageState extends State<HomePage> {
     "Padel",
   ];
 
-  
+  @override
+  void initState() {
+    super.initState();
 
-  
+    timer = Timer.periodic(const Duration(seconds: 4), (Timer timer) {
+      if (_currentPage < 5) {
+        _currentPage++;
+      } else {
+        _currentPage = 0;
+      }
+
+      _pageController.animateToPage(
+        _currentPage,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xff0F172A),
+      backgroundColor: Color(0xff0F172A),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: EdgeInsets.symmetric(horizontal: 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              SizedBox(height: 10),
 
-              /// ================= HEADER =================
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  const CircleAvatar(
-                    radius: 24,
-                    backgroundColor: Colors.orange,
-                    child: Icon(Icons.person, color: Colors.white),
-                  ),
-                  const SizedBox(width: 12),
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Selamat datang,",
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                      Text(
-                        "Wildan Malaki",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.notifications_none,
-                      color: Colors.white,
-                    ),
-                  )
-                ],
-              ),
-
-              const SizedBox(height: 25),
-
-              /// ================= TITLE =================
-              RichText(
-                text: const TextSpan(
+              /// HEADER
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                child: Row(
                   children: [
-                    TextSpan(
-                      text: "Mau main dimana\n",
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                    CircleAvatar(
+                      radius: 15,
+                      backgroundColor: Colors.orange,
+                      child: Icon(Icons.person, color: Colors.white),
                     ),
-                    TextSpan(
-                      text: "Wildan?",
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue,
+                    SizedBox(width: 10),
+
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Selamat datang,",
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                        Text(
+                          "Wildan Malaki",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    Spacer(),
+
+                    Container(
+                      padding: EdgeInsets.all(5),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.notifications_none,
+                        color: Colors.white,
                       ),
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 20),
+              SizedBox(height: 25),
 
-              /// ================= SEARCH =================
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 15),
-                decoration: BoxDecoration(
-                  color: const Color(0xff1E293B),
-                  borderRadius: BorderRadius.circular(30),
+              /// TEXT BESAR
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Text(
+                  "Mau main dimana,",
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
-                child: const TextField(
+              ),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Text(
+                  "Wildan?",
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 255, 205, 27),
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 20),
+
+              /// SEARCH
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 15),
+                decoration: BoxDecoration(
+                  color: Color(0xff1E293B),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+                child: TextField(
                   style: TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     icon: Icon(Icons.search, color: Colors.grey),
@@ -126,16 +155,15 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
 
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
 
-              /// ================= CATEGORY BUTTONS =================
+              /// CATEGORY
               SizedBox(
                 height: 45,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemCount: categories.length,
                   itemBuilder: (context, index) {
-
                     bool isSelected = selectedCategory == index;
 
                     return GestureDetector(
@@ -145,21 +173,22 @@ class _HomePageState extends State<HomePage> {
                         });
                       },
                       child: Container(
-                        margin: const EdgeInsets.only(right: 10),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 10),
+                        margin: EdgeInsets.only(right: 10),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        constraints: BoxConstraints(minWidth: 70),
                         decoration: BoxDecoration(
-                          color: isSelected
-                              ? Colors.green
-                              : const Color(0xff1E293B),
+                          color: isSelected ? Colors.green : Color(0xff1E293B),
                           borderRadius: BorderRadius.circular(30),
                         ),
                         child: Text(
                           categories[index],
+                          softWrap: false,
+                          overflow: TextOverflow.visible,
                           style: TextStyle(
-                            color: isSelected
-                                ? Colors.white
-                                : Colors.grey,
+                            color: isSelected ? Colors.white : Colors.grey,
                           ),
                         ),
                       ),
@@ -168,87 +197,185 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
 
-              const SizedBox(height: 30),
+              SizedBox(height: 30),
 
-              /// ================= FEATURED =================
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  Text(
-                    "Lapangan Rekomendasi",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    "See All",
-                    style: TextStyle(color: Colors.blue),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 15),
-
-              SizedBox(
-                height: 250,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
+              /// TITLE
+              Padding(
+                padding: const EdgeInsets.all(10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    FeatureCard(title: "Dekings Arena", 
-                    price: "Rp 700.000 - 1.500.000 ",
-                    imageurl: ("https://admin.saraga.id/storage/images/14572131-10154585801270699-3099495380002420769-n_1631619103.jpg"),
-
+                    Text(
+                      "Lapangan Rekomendasi",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                    FeatureCard(
-                    title: "Pancoran Soccer Field",
-                    price: "Rp 2.240.000 - 3.850.000  ",
-                    imageurl: ("https://gelora-public-storage.s3-ap-southeast-1.amazonaws.com/upload/public-20210216090138.jpg") 
-                    ),
-                    FeatureCard(
-                    title: "Goedang Sports Centre",
-                    price: "Rp 80.000 - 150.000  ",
-                    imageurl: "https://lh3.googleusercontent.com/gps-cs-s/AHVAweqOe9o23PeSBqWpJTwc-YBVsRXlPD5XQY5ZX6w4q8H7M3t46wJCVOsYyqthjQ0fdXWMKA8ADqxi79fkiRkJ4YhdYfIV7o7rurCQX7SYukto6u5FyzZdTLDWnldwam3kXTz-lS3M=s680-w680-h510-rw",
-                     ),
-                    FeatureCard(
-                    title: "Tifosi Sport Center", price: "Rp 175.000 - 350.000  ",
-                    imageurl: "https://www.indosport.com/views/1/images/tifosi/tifosi_2.jpg",
-                    ),
-                    FeatureCard(
-                    title: "One Padel",
-                    price: "Rp 130.000 - 230.000 ",
-                    imageurl: "https://asset.ayo.co.id/image/venue/177126892330542.image_cropper_1771268674495.jpg_large.jpeg",
-                    ),
-                    FeatureCard(
-                    title: "SR32 Minisoccer Setia Budi", 
-                    price: "Rp 2.240.000 - 3.850.000  ",
-                    imageurl: "https://sports-sr32.com/_next/image?url=%2Ffields%2Fmini-soccer%2Fsetiabudi%2Fsetiabudi-1.jpg&w=3840&q=75"),
-
-                    
+                    Text("See All", style: TextStyle(color: Colors.blue)),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 30),
+              SizedBox(height: 15),
 
-              /// ================= NEARBY =================
-              const Text(
-                "Lapangan Terdekat",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+              /// AUTO SLIDER
+              SizedBox(
+                height: 300,
+                child: PageView(
+                  controller: _pageController,
+                  children: [
+                    FeatureCard(
+                      title: "Dekings Arena",
+                      price: "Rp 700.000 - 1.500.000",
+                      imageurl:
+                          "https://admin.saraga.id/storage/images/14572131-10154585801270699-3099495380002420769-n_1631619103.jpg",
+                      location: "Lubang Buaya",
+                      rating: "4.5",
+                    ),
+                    FeatureCard(
+                      title: "Pancoran Soccer Field",
+                      price: "Rp 2.240.000 - 3.850.000",
+                      imageurl:
+                          "https://gelora-public-storage.s3-ap-southeast-1.amazonaws.com/upload/public-20210216090138.jpg",
+                      location: "Jakarta Selatan",
+                      rating: "4.5",
+                    ),
+                    FeatureCard(
+                      title: "Lapangan Sepakbola C",
+                      price: "Rp 1.500.000 - 4.500.000",
+                      imageurl:
+                          "https://cdn0-production-images-kly.akamaized.net/zXgbXIZi79R94m7KA894EfHB1jQ=/1231x710/smart/filters:quality(75):strip_icc()/kly-media-production/medias/1707784/original/096144000_1505210611-Lapangan-C-Senayan2.jpg",
+                      location: "Senayan",
+                      rating: "4.5",
+                    ),
+                    FeatureCard(
+                      title: "F7 MINISOCCER ARENA",
+                      price: "Rp 500.000 - 1.450.000",
+                      imageurl:
+                          "https://gelora-public-storage.s3-ap-southeast-1.amazonaws.com/upload/public-20230214134056.jpg",
+                      location: "Cilandak",
+                      rating: "4.5",
+                    ),
+                    FeatureCard(
+                      title: "Social Padel House Menteng",
+                      price: "Rp 180.000 - 400.000",
+                      imageurl:
+                          "https://images.unsplash.com/photo-1646649853703-7645147474ba?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cGFkZWx8ZW58MHx8MHx8fDA%3D",
+                      location: "Jakarta Timur",
+                      rating: "4.5",
+                    ),
+                    FeatureCard(
+                      title: "BBC Bali",
+                      price: "Rp 1.000.000 - 2.500.000",
+                      imageurl:
+                          "https://asset.ayo.co.id/image/venue/171835445216622.image_cropper_A9B84175-A6F2-42D6-A12D-C80E79027E1A-674-0000002CA2B49FDB_large.jpg",
+                      location: "Kota Denpasar, Bali",
+                      rating: "4.5",
+                    ),
+                  ],
                 ),
               ),
 
-              const SizedBox(height: 15),
+              SizedBox(height: 30),
 
-              const NearbyCard(title: "Pinang Ranti", price: "Mulai dari     Rp 100.000"),
-              const NearbyCard(title: "Lubang Buaya", price: "\$30/hr"),
-              const NearbyCard(title: "Ragunan", price: "Free"),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    Text(
+                      "Lapangan Terdekat",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Spacer(),
+                    Icon(Icons.filter_list, color: Colors.white),
+                  ],
+                ),
+              ),
 
-              const SizedBox(height: 100),
+              SizedBox(height: 15),
+
+              NearbyCard(
+                title: "Dekings Arena",
+                price: "BOOKING",
+                distance: "1.9 Km",
+                rating: "4.8",
+                imageUrl:
+                    "https://admin.saraga.id/storage/images/14572131-10154585801270699-3099495380002420769-n_1631619103.jpg",
+                tags: ["Football", "Shower", "Parking gratis", "Diskon"],
+              ),
+
+              NearbyCard(
+                title: "Alfa Rooftop Mini Soccer Tamini Square",
+                price: "BOOKING",
+                distance: "650 m",
+                rating: "4.6",
+                imageUrl:
+                    "https://asset.ayo.co.id/image/venue/170859795250713.image_cropper_1708597870231.jpg",
+                tags: ["Minisoccer", "Parking", "Free WiFi", "Promo!"],
+              ),
+
+              NearbyCard(
+                title: "Halim Futsal Badminton",
+                price: "BOOKING",
+                distance: "2.6 Km",
+                rating: "4.2",
+                imageUrl:
+                    "https://asset.ayo.co.id/image/venue/174288649079497.image_cropper_1742886399702.jpg_large.jpeg",
+                tags: ["Futsal", "Badminton", "free minuman", "Diskon!"],
+              ),
+              NearbyCard(
+                title: "Talenta Court",
+                price: "BOOKING",
+                distance: "8.9 Km",
+                rating: "4.2",
+                imageUrl:
+                    "https://asset.ayo.co.id/image/venue/177095980826513.image_cropper_1770959664162.jpg_large.jpeg",
+                tags: ["Basketball", "Public"],
+              ),
+              NearbyCard(
+                title: "Arena Dirgantara Mini Soccer",
+                price: "BOOKING",
+                distance: "18 Km",
+                rating: "3.9",
+                imageUrl:
+                    "https://asset.ayo.co.id/image/venue/175281821762319.image_cropper_1752818166728.jpg_large.jpeg",
+                tags: ["Basketball", "Public"],
+              ),
+              NearbyCard(
+                title: "Arena Dirgantara Mini Soccer",
+                price: "BOOKING",
+                distance: "8.9 Km",
+                rating: "4.2",
+                imageUrl:
+                    "https://asset.ayo.co.id/image/venue/175281821762319.image_cropper_1752818166728.jpg_large.jpeg",
+                tags: ["Basketball", "Public"],
+              ),
+              NearbyCard(
+                title: "Arena Dirgantara Mini Soccer",
+                price: "BOOKING",
+                distance: "8.9 Km",
+                rating: "4.2",
+                imageUrl:
+                    "https://asset.ayo.co.id/image/venue/175281821762319.image_cropper_1752818166728.jpg_large.jpeg",
+                tags: ["Basketball", "Public"],
+              ),
+              NearbyCard(
+                title: "Arena Dirgantara Mini Soccer",
+                price: "BOOKING",
+                distance: "8.9 Km",
+                rating: "4.2",
+                imageUrl:
+                    "https://asset.ayo.co.id/image/venue/175281821762319.image_cropper_1752818166728.jpg_large.jpeg",
+                tags: ["Basketball", "Public"],
+              ),
+
+              SizedBox(height: 100),
             ],
           ),
         ),
@@ -257,7 +384,6 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-///FEATURED CARD FUNGSINYA DISINI
 class FeatureCard extends StatelessWidget {
   final String title;
   final String price;
@@ -277,18 +403,16 @@ class FeatureCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 180,
-      margin: const EdgeInsets.only(right: 15),
-      padding: const EdgeInsets.all(15),
+      width: 300,
+      margin: EdgeInsets.only(right: 15),
+      padding: EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: const Color(0xff1E293B),
+        color: Color(0xff1E293B),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
-          /// FOTO LAPANGAN
           Expanded(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(15),
@@ -300,67 +424,113 @@ class FeatureCard extends StatelessWidget {
             ),
           ),
           SizedBox(height: 10),
-
-          ///
-
           Text(
-            title,style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-            ), 
+            title,
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 5),
-
-          Text(price,
-          style: TextStyle(
-            color: Colors.white,
-          ),)
-        ]
-      )
+          Text(price, style: TextStyle(color: Colors.white)),
+          SizedBox(height: 5),
+          Row(
+            children: [
+              Text(location, style: TextStyle(color: Colors.white)),
+              Spacer(),
+              Icon(Icons.location_on_outlined, color: Colors.white),
+            ],
+          ),
+          SizedBox(height: 5),
+          Row(
+            children: [
+              Text(rating, style: TextStyle(color: Colors.white)),
+              Icon(Icons.star, color: Colors.amber, size: 20),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
 
-/// ================= NEARBY CARD =================
 class NearbyCard extends StatelessWidget {
   final String title;
   final String price;
+  final String distance;
+  final String rating;
+  final String imageUrl;
+  final List<String> tags;
 
   const NearbyCard({
     super.key,
     required this.title,
     required this.price,
+    required this.distance,
+    required this.rating,
+    required this.imageUrl,
+    required this.tags,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(15),
+      margin: EdgeInsets.only(bottom: 15),
+      padding: EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: const Color(0xff1E293B),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         children: [
-          const CircleAvatar(
-            radius: 25,
-            backgroundColor: Colors.blueGrey,
-          ),
-          const SizedBox(width: 15),
+          CircleAvatar(radius: 28, backgroundImage: NetworkImage(imageUrl)),
+          SizedBox(width: 15),
           Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    Text(price, style: TextStyle(color: Colors.blue)),
+                  ],
+                ),
+                SizedBox(height: 5),
+                Row(
+                  children: [
+                    Icon(Icons.location_on, size: 14, color: Colors.grey),
+                    SizedBox(width: 4),
+                    Text(distance, style: TextStyle(color: Colors.grey)),
+                    SizedBox(width: 10),
+                    Icon(Icons.star, size: 14, color: Colors.amber),
+                    SizedBox(width: 3),
+                    Text(rating, style: TextStyle(color: Colors.grey)),
+                  ],
+                ),
+                SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  children: tags.map((tag) {
+                    return Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.black26,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        tag,
+                        style: TextStyle(color: Colors.white, fontSize: 11),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
             ),
-          ),
-          Text(
-            price,
-            style: const TextStyle(color: Colors.blue),
           ),
         ],
       ),
