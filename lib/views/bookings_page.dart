@@ -10,6 +10,8 @@ class BookingsPage extends StatefulWidget {
 class _BookingsPageState extends State<BookingsPage> {
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Scaffold(backgroundColor: Color(0xff0F172A)
+    
+    );
   }
 }

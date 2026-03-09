@@ -1,4 +1,6 @@
+import 'package:MyField/views/bookings_page.dart';
 import 'package:MyField/views/home_page.dart';
+import 'package:MyField/views/profile.dart';
 import 'package:flutter/material.dart';
 
 class bottomNavbar extends StatefulWidget {
@@ -13,9 +15,9 @@ class Bottomnavbar extends State<bottomNavbar> {
 
   final List<Widget> _pages = [
     HomePage(),
-    Center(child: Text("Bookings Page")),
+    BookingsPage(),
     Center(child: Text("Community Page")),
-    Center(child: Text("Profile Page")),
+    ProfilePage(),
   ];
 
   void _onItemTapped(int index) {
