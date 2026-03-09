@@ -1,3 +1,4 @@
+import 'package:MyField/views/detail_booking.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
@@ -52,28 +53,27 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xff0F172A),
+      backgroundColor: const Color(0xff0F172A),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 0),
+          padding: const EdgeInsets.symmetric(horizontal: 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
 
               /// HEADER
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                padding: const EdgeInsets.symmetric(horizontal: 5.0),
                 child: Row(
                   children: [
-                    CircleAvatar(
+                    const CircleAvatar(
                       radius: 15,
                       backgroundColor: Colors.orange,
                       child: Icon(Icons.person, color: Colors.white),
                     ),
-                    SizedBox(width: 10),
-
-                    Column(
+                    const SizedBox(width: 10),
+                    const Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
@@ -90,16 +90,14 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ],
                     ),
-
-                    Spacer(),
-
+                    const Spacer(),
                     Container(
-                      padding: EdgeInsets.all(5),
+                      padding: const EdgeInsets.all(5),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.notifications_none,
                         color: Colors.white,
                       ),
@@ -108,11 +106,11 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
 
-              SizedBox(height: 25),
+              const SizedBox(height: 25),
 
               /// TEXT BESAR
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 5.0),
                 child: Text(
                   "Mau main dimana,",
                   style: TextStyle(
@@ -123,8 +121,8 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
 
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 5.0),
                 child: Text(
                   "Wildan?",
                   style: TextStyle(
@@ -135,14 +133,19 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
 
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
 
               /// SEARCH
               Container(
+                margin: EdgeInsets.symmetric(
+                  horizontal: 3,
+                ), // Tambahan margin agar sejajar
                 padding: EdgeInsets.symmetric(horizontal: 15),
                 decoration: BoxDecoration(
                   color: Color(0xff1E293B),
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(
+                    10,
+                  ), // Ubah radius agar lebih smooth
                 ),
                 child: TextField(
                   style: TextStyle(color: Colors.white),
@@ -173,7 +176,10 @@ class _HomePageState extends State<HomePage> {
                         });
                       },
                       child: Container(
-                        margin: EdgeInsets.only(right: 10),
+                        margin: EdgeInsets.only(
+                          left: index == 0 ? 10 : 0,
+                          right: 10,
+                        ), // Padding awal
                         padding: EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 10,
@@ -201,7 +207,7 @@ class _HomePageState extends State<HomePage> {
 
               /// TITLE
               Padding(
-                padding: const EdgeInsets.all(10),
+                padding: EdgeInsets.all(10),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -281,7 +287,7 @@ class _HomePageState extends State<HomePage> {
               SizedBox(height: 30),
 
               Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: EdgeInsets.all(10.0),
                 child: Row(
                   children: [
                     Text(
@@ -347,33 +353,6 @@ class _HomePageState extends State<HomePage> {
                     "https://asset.ayo.co.id/image/venue/175281821762319.image_cropper_1752818166728.jpg_large.jpeg",
                 tags: ["Basketball", "Public"],
               ),
-              NearbyCard(
-                title: "Arena Dirgantara Mini Soccer",
-                price: "BOOKING",
-                distance: "8.9 Km",
-                rating: "4.2",
-                imageUrl:
-                    "https://asset.ayo.co.id/image/venue/175281821762319.image_cropper_1752818166728.jpg_large.jpeg",
-                tags: ["Basketball", "Public"],
-              ),
-              NearbyCard(
-                title: "Arena Dirgantara Mini Soccer",
-                price: "BOOKING",
-                distance: "8.9 Km",
-                rating: "4.2",
-                imageUrl:
-                    "https://asset.ayo.co.id/image/venue/175281821762319.image_cropper_1752818166728.jpg_large.jpeg",
-                tags: ["Basketball", "Public"],
-              ),
-              NearbyCard(
-                title: "Arena Dirgantara Mini Soccer",
-                price: "BOOKING",
-                distance: "8.9 Km",
-                rating: "4.2",
-                imageUrl:
-                    "https://asset.ayo.co.id/image/venue/175281821762319.image_cropper_1752818166728.jpg_large.jpeg",
-                tags: ["Basketball", "Public"],
-              ),
 
               SizedBox(height: 100),
             ],
@@ -404,10 +383,10 @@ class FeatureCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 300,
-      margin: EdgeInsets.only(right: 15),
-      padding: EdgeInsets.all(15),
+      margin: const EdgeInsets.only(right: 15),
+      padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: Color(0xff1E293B),
+        color: const Color(0xff1E293B),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -423,26 +402,29 @@ class FeatureCard extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Text(
             title,
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          SizedBox(height: 5),
-          Text(price, style: TextStyle(color: Colors.white)),
-          SizedBox(height: 5),
+          const SizedBox(height: 5),
+          Text(price, style: const TextStyle(color: Colors.white)),
+          const SizedBox(height: 5),
           Row(
             children: [
-              Text(location, style: TextStyle(color: Colors.white)),
-              Spacer(),
-              Icon(Icons.location_on_outlined, color: Colors.white),
+              Text(location, style: const TextStyle(color: Colors.white)),
+              const Spacer(),
+              const Icon(Icons.location_on_outlined, color: Colors.white),
             ],
           ),
-          SizedBox(height: 5),
+          const SizedBox(height: 5),
           Row(
             children: [
-              Text(rating, style: TextStyle(color: Colors.white)),
-              Icon(Icons.star, color: Colors.amber, size: 20),
+              Text(rating, style: const TextStyle(color: Colors.white)),
+              const Icon(Icons.star, color: Colors.amber, size: 20),
             ],
           ),
         ],
@@ -472,8 +454,8 @@ class NearbyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(bottom: 15),
-      padding: EdgeInsets.all(15),
+      margin: const EdgeInsets.only(bottom: 15, left: 10, right: 10),
+      padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: const Color(0xff1E293B),
         borderRadius: BorderRadius.circular(20),
@@ -481,7 +463,7 @@ class NearbyCard extends StatelessWidget {
       child: Row(
         children: [
           CircleAvatar(radius: 28, backgroundImage: NetworkImage(imageUrl)),
-          SizedBox(width: 15),
+          const SizedBox(width: 15),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -497,7 +479,31 @@ class NearbyCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Text(price, style: TextStyle(color: Colors.blue)),
+
+                    /// PERUBAHAN ADA DI SINI: TextButton untuk Booking
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.blue,
+                        splashFactory: NoSplash
+                            .splashFactory, // Agar warnanya biru seperti di gambar
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: () {
+                        // KODE UNTUK PINDAH HALAMAN
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DetailBooking(),
+                          ),
+                        );
+                      },
+                      child: Text("BOOKING"),
+                    ),
                   ],
                 ),
                 SizedBox(height: 5),

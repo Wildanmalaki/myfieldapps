@@ -1,3 +1,4 @@
+import 'package:MyField/models/booking_model.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import '../models/user_model.dart';
@@ -18,11 +19,7 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _createDB,
-    );
+    return await openDatabase(path, version: 1, onCreate: _createDB);
   }
 
   Future _createDB(Database db, int version) async {
@@ -33,49 +30,76 @@ class DatabaseHelper {
         password TEXT
       )
     ''');
+
+    await db.execute('''
+    CREATE TABLE bookings(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    lapangan TEXT,
+    tanggal TEXT,
+    waktu TEXT,
+    status TEXT
+)
+''');
   }
 
   Future<int> insertUser(UserModel user) async {
-  final db = await instance.database;
+    final db = await instance.database;
 
-  return await db.insert(
-    'users',
-    user.toMap(),
-  );
-}
-
-Future<UserModel?> loginUser({
-  required String email,
-  required String password,
-}) async {
-  final db = await instance.database;
-
-  final result = await db.query(
-    'users',
-    where: 'email = ? AND password = ?',
-    whereArgs: [email, password],
-  );
-
-  if (result.isNotEmpty) {
-    return UserModel.fromMap(result.first);
-  } else {
-    return null;
+    return await db.insert('users', user.toMap());
   }
-}
 
-Future<UserModel?> getUserByEmail(String email) async {
-  final db = await instance.database;
+  Future<UserModel?> loginUser({
+    required String email,
+    required String password,
+  }) async {
+    final db = await instance.database;
 
-  final result = await db.query(
-    'users',
-    where: 'email = ?',
-    whereArgs: [email],
-  );
+    final result = await db.query(
+      'users',
+      where: 'email = ? AND password = ?',
+      whereArgs: [email, password],
+    );
 
-  if (result.isNotEmpty) {
-    return UserModel.fromMap(result.first);
-  } else {
-    return null;
+    if (result.isNotEmpty) {
+      return UserModel.fromMap(result.first);
+    } else {
+      return null;
+    }
   }
-}
+
+  Future<UserModel?> getUserByEmail(String email) async {
+    final db = await instance.database;
+
+    final result = await db.query(
+      'users',
+      where: 'email = ?',
+      whereArgs: [email],
+    );
+
+    if (result.isNotEmpty) {
+      return UserModel.fromMap(result.first);
+    } else {
+      return null;
+    }
+  }
+
+  //insert booking
+  Future<int> insertBooking(Booking booking) async {
+    final db = await database;
+    return await db.insert("bookings", booking.toMap());
+  }
+
+  //Get booking
+  Future<List<Booking>> getBookings() async {
+    final db = await database;
+    final result = await db.query("bookings");
+
+    return result.map((e) => Booking.fromMap(e)).toList();
+  }
+
+  //Hapus bookingan
+  Future<int> deleteBooking(int id) async {
+    final db = await database;
+    return await db.delete("bookings", where: "id = ?", whereArgs: [id]);
+  }
 }
