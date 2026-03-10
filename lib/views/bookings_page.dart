@@ -22,10 +22,12 @@ class _BookingsPageState extends State<BookingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xff0F1B2A),
-
       appBar: AppBar(
         backgroundColor: Color(0xff0F1B2A),
-        title: Text("My Bookings"),
+        title: Text(
+          "Riwayat",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
       ),
 
       body: FutureBuilder<List<Booking>>(
@@ -55,7 +57,7 @@ class _BookingsPageState extends State<BookingsPage> {
   Widget bookingCard(Booking booking) {
     return Container(
       margin: EdgeInsets.only(bottom: 16),
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(24),
 
       decoration: BoxDecoration(
         color: Color(0xff1E2A3A),
@@ -66,6 +68,15 @@ class _BookingsPageState extends State<BookingsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
 
         children: [
+          Text(
+            "MyField",
+            style: TextStyle(
+              color: Colors.amberAccent,
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+            ),
+          ),
+          SizedBox(height: 5),
           Text(
             booking.lapangan,
             style: TextStyle(

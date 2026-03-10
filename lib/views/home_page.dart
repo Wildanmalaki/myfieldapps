@@ -484,8 +484,8 @@ class NearbyCard extends StatelessWidget {
                     TextButton(
                       style: TextButton.styleFrom(
                         foregroundColor: Colors.blue,
-                        splashFactory: NoSplash
-                            .splashFactory, // Agar warnanya biru seperti di gambar
+                        splashFactory: NoSplash.splashFactory,
+                        overlayColor: Colors.transparent,
                         padding: EdgeInsets.symmetric(
                           horizontal: 8,
                           vertical: 4,
@@ -494,11 +494,19 @@ class NearbyCard extends StatelessWidget {
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                       onPressed: () {
-                        // KODE UNTUK PINDAH HALAMAN
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => DetailBooking(),
+                          PageRouteBuilder(
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    DetailBooking(
+                                      namaLapangan: title,
+                                      lokasi: distance,
+                                      rating: double.parse(rating),
+                                      gambar: imageUrl,
+                                    ),
+                            transitionDuration: Duration.zero,
+                            reverseTransitionDuration: Duration.zero,
                           ),
                         );
                       },

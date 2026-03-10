@@ -1,12 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:MyField/database/database_helper.dart';
+import 'package:MyField/models/booking_model.dart';
+
 class DetailBooking extends StatefulWidget {
-  const DetailBooking({super.key});
+  final String namaLapangan;
+  final String lokasi;
+  final double rating;
+  final String gambar;
+
+  const DetailBooking({
+    super.key,
+    required this.namaLapangan,
+    required this.lokasi,
+    required this.rating,
+    required this.gambar,
+  });
 
   @override
-  State<DetailBooking> createState() => _CourtBookingScreenState();
+  State<DetailBooking> createState() => _DetailBookingState();
 }
 
-class _CourtBookingScreenState extends State<DetailBooking> {
+class _DetailBookingState extends State<DetailBooking> {
   // Warna Tema
   final Color bgColor = const Color(0xFF121824);
   final Color cardColor = const Color(0xFF1E2736);
@@ -82,19 +96,19 @@ class _CourtBookingScreenState extends State<DetailBooking> {
   Widget _buildHeaderImage() {
     return Stack(
       children: [
-        // Placeholder gambar lapangan
+        // gambar lapangan
         Container(
           height: 250,
           width: double.infinity,
           decoration: const BoxDecoration(
             image: DecorationImage(
               image: NetworkImage(
-                'https://images.unsplash.com/photo-1622225369240-cdd669512652?q=80&w=1000&auto=format&fit=crop',
+                'https://admin.saraga.id/storage/images/14572131-10154585801270699-3099495380002420769-n_1631619103.jpg',
               ),
               fit: BoxFit.cover,
             ),
           ),
-          // Overlay gradient agar teks di atas gambar terbaca
+          // Overlay hitam
           child: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -148,7 +162,7 @@ class _CourtBookingScreenState extends State<DetailBooking> {
           children: [
             Expanded(
               child: Text(
-                'Downtown Padel Center',
+                widget.namaLapangan,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 24,
@@ -180,7 +194,7 @@ class _CourtBookingScreenState extends State<DetailBooking> {
             Icon(Icons.location_on, color: primaryBlue, size: 16),
             const SizedBox(width: 4),
             Text(
-              '123 Stadium Road, Central District',
+              widget.lokasi,
               style: TextStyle(color: textMuted, fontSize: 13),
             ),
           ],
@@ -188,9 +202,9 @@ class _CourtBookingScreenState extends State<DetailBooking> {
         const SizedBox(height: 12),
         Row(
           children: [
-            const Text(
-              '4.8',
-              style: TextStyle(
+            Text(
+              widget.rating.toString(),
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -225,7 +239,7 @@ class _CourtBookingScreenState extends State<DetailBooking> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Facilities',
+          "Fasilitas",
           style: TextStyle(
             color: Colors.white,
             fontSize: 16,
@@ -286,7 +300,7 @@ class _CourtBookingScreenState extends State<DetailBooking> {
             Row(
               children: [
                 Text(
-                  'October 2023',
+                  'Maret 2026',
                   style: TextStyle(color: primaryBlue, fontSize: 14),
                 ),
                 Icon(Icons.keyboard_arrow_down, color: primaryBlue, size: 20),
@@ -350,18 +364,18 @@ class _CourtBookingScreenState extends State<DetailBooking> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Available Slots',
+          'Jam Kosong',
           style: TextStyle(
             color: Colors.white,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         GridView.builder(
           shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          physics: NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 3,
             childAspectRatio: 2.5,
             crossAxisSpacing: 12,
@@ -403,12 +417,8 @@ class _CourtBookingScreenState extends State<DetailBooking> {
                       ),
                     ),
                     if (isSelected) ...[
-                      const SizedBox(width: 4),
-                      const Icon(
-                        Icons.check_circle,
-                        color: Colors.white,
-                        size: 14,
-                      ),
+                      SizedBox(width: 4),
+                      Icon(Icons.check_circle, color: Colors.white, size: 14),
                     ],
                   ],
                 ),
@@ -435,7 +445,7 @@ class _CourtBookingScreenState extends State<DetailBooking> {
               Icon(Icons.info, color: primaryBlue, size: 20),
               const SizedBox(width: 8),
               const Text(
-                'Court Rules',
+                'Syarat ketentuan',
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -445,9 +455,10 @@ class _CourtBookingScreenState extends State<DetailBooking> {
             ],
           ),
           const SizedBox(height: 12),
-          _buildRuleItem('Proper padel shoes required.'),
-          _buildRuleItem('Max 4 players per court.'),
-          _buildRuleItem('Cancel 24h before for full refund.'),
+
+          _buildRuleItem('Harus menjaga kebersihan lapangan'),
+          _buildRuleItem('Dilarang ngeroko di lapangan'),
+          _buildRuleItem('Membatalkan secara sepihak maka tidak bisa refund'),
         ],
       ),
     );
@@ -493,7 +504,7 @@ class _CourtBookingScreenState extends State<DetailBooking> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   const Text(
-                    '\$45.00',
+                    'Rp 450.000',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 22,
@@ -510,7 +521,22 @@ class _CourtBookingScreenState extends State<DetailBooking> {
             ],
           ),
           ElevatedButton(
-            onPressed: () {},
+            onPressed: () async {
+              final booking = Booking(
+                lapangan: widget.namaLapangan,
+                tanggal: dates[selectedDateIndex]['date']!,
+                waktu: selectedTime,
+                status: "Booked",
+              );
+
+              await DatabaseHelper.instance.insertBooking(booking);
+
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text("Booking berhasil")));
+
+              Navigator.pop(context);
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: primaryBlue,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
@@ -521,7 +547,7 @@ class _CourtBookingScreenState extends State<DetailBooking> {
             child: const Row(
               children: [
                 Text(
-                  'Book Now',
+                  'Booking',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
