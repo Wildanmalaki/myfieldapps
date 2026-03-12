@@ -34,6 +34,7 @@ class DatabaseHelper {
     await db.execute('''
     CREATE TABLE bookings(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    userId INTEGER,
     lapangan TEXT,
     tanggal TEXT,
     waktu TEXT,
