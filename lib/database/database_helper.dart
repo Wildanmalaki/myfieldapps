@@ -41,17 +41,6 @@ class DatabaseHelper {
     harga TEXT
 )
 ''');
-
-    await db.execute('''
-  CREATE TABLE bookings (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER,
-    nama_lapangan TEXT,
-    tanggal TEXT,
-    harga TEXT,
-    FOREIGN KEY (user_id) REFERENCES users (id)
-  )
-''');
   }
 
   Future<int> insertUser(UserModel user) async {
@@ -114,5 +103,4 @@ class DatabaseHelper {
     final db = await database;
     return await db.delete("bookings", where: "id = ?", whereArgs: [id]);
   }
-
 }

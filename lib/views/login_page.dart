@@ -4,7 +4,6 @@ import 'package:MyField/views/home_page.dart';
 import 'package:MyField/views/pendaftaran_page.dart';
 import 'package:MyField/widget/bottomnavbar.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   LoginPage({super.key});
@@ -22,6 +21,7 @@ class _LoginPage extends State<LoginPage> {
     return Scaffold(
       body: Stack(
         children: [
+
           /// BACKGROUND IMAGE
           Container(
             decoration: BoxDecoration(
@@ -32,8 +32,10 @@ class _LoginPage extends State<LoginPage> {
             ),
           ),
 
-          /// OVERLAY
-          Container(color: Colors.black.withOpacity(0.4)),
+          /// OVERLAY 
+          Container(
+            color: Colors.black.withOpacity(0.4),
+          ),
 
           /// FORM LOGIN
           Center(
@@ -42,6 +44,7 @@ class _LoginPage extends State<LoginPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+
                   SizedBox(height: 40),
 
                   Text(
@@ -56,9 +59,12 @@ class _LoginPage extends State<LoginPage> {
 
                   SizedBox(height: 10),
 
-                  Text(
+                   Text(
                     "Silahkan login untuk melanjutkan",
-                    style: TextStyle(fontSize: 16, color: Colors.white70),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white70,
+                    ),
                     textAlign: TextAlign.center,
                   ),
 
@@ -100,7 +106,10 @@ class _LoginPage extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(14),
                         borderSide: BorderSide.none,
                       ),
-                      prefixIcon: Icon(Icons.lock_outline, color: Colors.white),
+                      prefixIcon: Icon(
+                        Icons.lock_outline,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
 
@@ -118,23 +127,22 @@ class _LoginPage extends State<LoginPage> {
                         ),
                       ),
                       onPressed: () async {
-                        bool emailValid = RegExp(
-                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                        ).hasMatch(emailController.text);
 
-                        if (!emailValid) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Format email tidak valid")),
-                          );
-                          return;
-                        }
+                         bool emailValid = RegExp(
+                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                           ).hasMatch(emailController.text);
+
+                          if (!emailValid) {
+                           ScaffoldMessenger.of(context).showSnackBar(
+                             SnackBar(content: Text("Format email tidak valid")),
+                      );
+                        return;
+  }
 
                         if (passwordController.text.length < 6) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(
-                                "Password harus minimal 6 karakter",
-                              ),
+                              content: Text("Password harus minimal 6 karakter"),
                             ),
                           );
                           return;
@@ -142,59 +150,45 @@ class _LoginPage extends State<LoginPage> {
 
                         if (!emailController.text.contains('@')) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Email tidak valid")),
-                          );
-                          return;
-                        }
-
-                        if (emailController.text.isEmpty ||
-                            passwordController.text.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(
-                                "Email dan Password tidak boleh kosong",
-                              ),
+                              content: Text("Email tidak valid"),
                             ),
                           );
                           return;
                         }
-                        final UserModel? login = await DatabaseHelper.instance
-                            .loginUser(
-                              email: emailController.text,
-                              password: passwordController.text,
-                            );
+
+                        if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text("Email dan Password tidak boleh kosong"),
+                            ),
+                          );
+                          return;
+                        }
+                        final UserModel? login =
+                            await DatabaseHelper.instance.loginUser(
+                            email: emailController.text,
+                            password: passwordController.text,
+                        );
 
                         if (login != null) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Login Berhasil")),
+                             SnackBar(
+                              content: Text("Login Berhasil"),
+                            ),
                           );
 
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => bottomNavbar(),
+                              builder: (context) =>
+                                  bottomNavbar(),
                             ),
                           );
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Email / Password Salah")),
-                          );
-                        }
-
-                        if (login != null) {
-                          SharedPreferences prefs =
-                              await SharedPreferences.getInstance();
-                          await prefs.setBool('isLoggedIn', true);
-                          await prefs.setString(
-                            'userEmail',
-                            emailController.text,
-                          );
-                          await prefs.setInt('userId', login.id!);
-
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => bottomNavbar(),
+                            SnackBar(
+                              content: Text("Email / Password Salah"),
                             ),
                           );
                         }
@@ -204,7 +198,7 @@ class _LoginPage extends State<LoginPage> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: Colors.white
                         ),
                       ),
                     ),
@@ -218,14 +212,15 @@ class _LoginPage extends State<LoginPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => PendaftaranUser(),
+                          builder: (context) =>
+                              PendaftaranUser(),
                         ),
                       );
                     },
                     child: Text(
                       "Belum punya akun? Daftar disini",
                       style: TextStyle(
-                        color: Color.fromARGB(255, 255, 255, 255),
+                        color:Color.fromARGB(255, 255, 255, 255),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -235,14 +230,20 @@ class _LoginPage extends State<LoginPage> {
 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [],
+                    children: [
+                      
+                    ],
                   ),
 
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+
+                    },
                     child: Text(
                       "Lupa Password?",
-                      style: TextStyle(color: Colors.white70),
+                      style: TextStyle(
+                        color: Colors.white70,
+                      ),
                     ),
                   ),
 
