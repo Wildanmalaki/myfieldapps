@@ -308,7 +308,7 @@ class _HomePageState extends State<HomePage> {
 
               NearbyCard(
                 title: "Dekings Arena",
-                price: "BOOKING",
+                price: "Rp 1.500.000",
                 distance: "1.9 Km",
                 rating: "4.8",
                 imageUrl:
@@ -318,7 +318,7 @@ class _HomePageState extends State<HomePage> {
 
               NearbyCard(
                 title: "Alfa Rooftop Mini Soccer Tamini Square",
-                price: "BOOKING",
+                price: "Rp 2.500.000",
                 distance: "650 m",
                 rating: "4.6",
                 imageUrl:
@@ -328,7 +328,7 @@ class _HomePageState extends State<HomePage> {
 
               NearbyCard(
                 title: "Halim Futsal Badminton",
-                price: "BOOKING",
+                price: "Rp 200.000",
                 distance: "2.6 Km",
                 rating: "4.2",
                 imageUrl:
@@ -337,7 +337,7 @@ class _HomePageState extends State<HomePage> {
               ),
               NearbyCard(
                 title: "Talenta Court",
-                price: "BOOKING",
+                price: "Rp 400.000",
                 distance: "8.9 Km",
                 rating: "4.2",
                 imageUrl:
@@ -346,7 +346,7 @@ class _HomePageState extends State<HomePage> {
               ),
               NearbyCard(
                 title: "Arena Dirgantara Mini Soccer",
-                price: "BOOKING",
+                price: "Rp 600.000",
                 distance: "18 Km",
                 rating: "3.9",
                 imageUrl:
@@ -504,6 +504,7 @@ class NearbyCard extends StatelessWidget {
                                       lokasi: distance,
                                       rating: double.parse(rating),
                                       gambar: imageUrl,
+                                      harga: price,
                                     ),
                             transitionDuration: Duration.zero,
                             reverseTransitionDuration: Duration.zero,

@@ -7,6 +7,7 @@ class DetailBooking extends StatefulWidget {
   final String lokasi;
   final double rating;
   final String gambar;
+  final String harga;
 
   const DetailBooking({
     super.key,
@@ -14,6 +15,7 @@ class DetailBooking extends StatefulWidget {
     required this.lokasi,
     required this.rating,
     required this.gambar,
+    required this.harga,
   });
 
   @override
@@ -100,11 +102,9 @@ class _DetailBookingState extends State<DetailBooking> {
         Container(
           height: 250,
           width: double.infinity,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             image: DecorationImage(
-              image: NetworkImage(
-                'https://admin.saraga.id/storage/images/14572131-10154585801270699-3099495380002420769-n_1631619103.jpg',
-              ),
+              image: NetworkImage((widget.gambar)),
               fit: BoxFit.cover,
             ),
           ),
@@ -308,13 +308,13 @@ class _DetailBookingState extends State<DetailBooking> {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         SizedBox(
           height: 80,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: dates.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 12),
+            separatorBuilder: (context, index) => SizedBox(width: 12),
             itemBuilder: (context, index) {
               bool isSelected = selectedDateIndex == index;
               return GestureDetector(
@@ -339,7 +339,7 @@ class _DetailBookingState extends State<DetailBooking> {
                           fontSize: 13,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       Text(
                         dates[index]['date']!,
                         style: TextStyle(
@@ -503,8 +503,8 @@ class _DetailBookingState extends State<DetailBooking> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Text(
-                    'Rp 450.000',
+                  Text(
+                    widget.harga,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 22,
@@ -527,6 +527,7 @@ class _DetailBookingState extends State<DetailBooking> {
                 tanggal: dates[selectedDateIndex]['date']!,
                 waktu: selectedTime,
                 status: "Booked",
+                harga: widget.harga,
               );
 
               await DatabaseHelper.instance.insertBooking(booking);

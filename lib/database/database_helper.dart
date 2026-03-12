@@ -37,8 +37,20 @@ class DatabaseHelper {
     lapangan TEXT,
     tanggal TEXT,
     waktu TEXT,
-    status TEXT
+    status TEXT,
+    harga TEXT
 )
+''');
+
+    await db.execute('''
+  CREATE TABLE bookings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    nama_lapangan TEXT,
+    tanggal TEXT,
+    harga TEXT,
+    FOREIGN KEY (user_id) REFERENCES users (id)
+  )
 ''');
   }
 
@@ -102,4 +114,5 @@ class DatabaseHelper {
     final db = await database;
     return await db.delete("bookings", where: "id = ?", whereArgs: [id]);
   }
+
 }
