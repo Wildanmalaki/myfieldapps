@@ -1,3 +1,4 @@
+import 'package:MyField/fieldreview/view/field_review_form.dart';
 import 'package:MyField/views/splash.dart';
 import 'package:flutter/material.dart';
 
@@ -29,10 +30,10 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: .fromSeed(seedColor: const Color.fromARGB(255, 0, 0, 0)),
       ),
       home: SplashScreen(),
+      routes: {'/reviews': (context) => const FieldReviewFormPage()},
     );
   }
 }
-

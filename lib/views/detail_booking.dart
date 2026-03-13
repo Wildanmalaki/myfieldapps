@@ -219,13 +219,26 @@ class _DetailBookingState extends State<DetailBooking> {
               ),
             ),
             const SizedBox(width: 8),
-            Text(
-              '120 reviews',
-              style: TextStyle(
-                color: primaryBlue,
-                fontSize: 13,
-                decoration: TextDecoration.underline,
-                decorationColor: primaryBlue,
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/reviews');
+              },
+              // Mengatur gaya tombol agar 'kawin' dengan tema
+              style: ElevatedButton.styleFrom(
+                foregroundColor:
+                    Colors.white, // Warna teks/ikon di dalam tombol
+                backgroundColor: Color.fromARGB(255, 69, 131, 255),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+              ),
+              child: const Text(
+                'Review Lapangan',
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
           ],
