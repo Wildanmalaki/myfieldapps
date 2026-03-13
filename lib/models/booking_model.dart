@@ -1,6 +1,3 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'dart:convert';
-
 class Booking {
   int? id;
   int userID;
@@ -21,9 +18,9 @@ class Booking {
   });
 
   Map<String, dynamic> toMap() {
-    return <String, dynamic>{
+    return {
       'id': id,
-      'userID': userID,
+      'userId': userID,
       'lapangan': lapangan,
       'tanggal': tanggal,
       'waktu': waktu,
@@ -34,17 +31,13 @@ class Booking {
 
   factory Booking.fromMap(Map<String, dynamic> map) {
     return Booking(
-      id: map['id'] != null ? map['id'] as int : null,
-      userID: map['userID'] as int,
-      lapangan: map['lapangan'] as String,
-      tanggal: map['tanggal'] as String,
-      waktu: map['waktu'] as String,
-      status: map['status'] as String,
-      harga: map['harga'] as String,
+      id: map['id'],
+      userID: map['userId'],
+      lapangan: map['lapangan'],
+      tanggal: map['tanggal'],
+      waktu: map['waktu'],
+      status: map['status'],
+      harga: map['harga'],
     );
   }
-
-  String toJson() => json.encode(toMap());
-
-  factory Booking.fromJson(String source) => Booking.fromMap(json.decode(source) as Map<String, dynamic>);
 }
