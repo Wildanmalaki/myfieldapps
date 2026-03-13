@@ -32,18 +32,29 @@ class _FieldReviewFormPageState extends State<FieldReviewFormPage> {
   }
 
   void saveReview() async {
-    final review = FieldReview(
-      fieldName: fieldController.text,
-      reviewer: reviewerController.text,
-      comment: commentController.text,
-      rating: rating,
-      createdAt: DateTime.now(),
-    );
+    try {
+      final review = FieldReview(
+        fieldName: fieldController.text,
+        reviewer: reviewerController.text,
+        comment: commentController.text,
+        rating: rating,
+        createdAt: DateTime.now(),
+      );
 
-    await FieldReviewService.createReview(review);
+      await FieldReviewService.createReview(review);
 
-    if (!mounted) return;
-    Navigator.pop(context);
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Review berhasil disimpan")));
+
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: $e")));
+    }
   }
 
   Widget buildStar(int index) {
@@ -174,24 +185,32 @@ class _FieldReviewFormPageState extends State<FieldReviewFormPage> {
             const Spacer(),
 
             /// SUBMIT BUTTON
-            GestureDetector(
-              onTap: FieldReviewListPage.new,
-              child: Container(
-                height: 56,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(28),
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF3A8DFF), Color(0xFF2A6FD6)],
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: saveReview,
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(28),
                   ),
+                  padding: EdgeInsets.zero,
                 ),
-                child: Center(
-                  child: Text(
-                    "Submit Review ➤",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                child: Ink(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF3A8DFF), Color(0xFF2A6FD6)],
+                    ),
+                    borderRadius: BorderRadius.all(Radius.circular(28)),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      "Submit Review ➤",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
