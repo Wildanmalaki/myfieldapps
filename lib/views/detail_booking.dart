@@ -1,6 +1,9 @@
+import 'package:MyField/fieldreview/view/review_list_page.dart';
 import 'package:flutter/material.dart';
 import 'package:MyField/database/database_helper.dart';
 import 'package:MyField/models/booking_model.dart';
+
+
 
 
 class DetailBooking extends StatefulWidget {
@@ -221,27 +224,18 @@ class _DetailBookingState extends State<DetailBooking> {
             ),
             const SizedBox(width: 8),
             ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/reviews');
-              },
-              // Mengatur gaya tombol agar 'kawin' dengan tema
-              style: ElevatedButton.styleFrom(
-                foregroundColor:
-                    Colors.white, // Warna teks/ikon di dalam tombol
-                backgroundColor: Color.fromARGB(255, 69, 131, 255),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-              ),
-              child: const Text(
-                'Lihat Review',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
+  child: const Text("Lihat Review"),
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ReviewListPage(
+          fieldName: "Talenta Court",
+        ),
+      ),
+    );
+  },
+)
           ],
         ),
       ],
