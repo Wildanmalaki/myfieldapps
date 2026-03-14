@@ -16,70 +16,47 @@ class _PendaftaranUserState extends State<PendaftaranUser> {
   final TextEditingController confirmPasswordController = TextEditingController();
 
   void daftarUser() async {
+
   String email = emailController.text;
   String password = passwordController.text;
   String confirmPassword = confirmPasswordController.text;
 
-   final existingUser =
-      await DatabaseHelper.instance.getUserByEmail(email);
-
-  if (existingUser != null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Email sudah terdaftar")),
-    );
-    return;
-  }
-
-  if (password.length < 6) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Password minimal 6 karakter")),
-    );
-    return;
-  }
-
-  bool emailValid = RegExp(
-    r'^[^@]+@[^@]+\.[^@]+',
-    ).hasMatch(email);
-
-  if (!emailValid) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Format email tidak valid")),
-    );
-    return;
-  }
-
   if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Semua field harus diisi")),
+      const SnackBar(content: Text("Semua field harus diisi")),
     );
     return;
   }
 
   if (password != confirmPassword) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Password tidak sama")),
+      const SnackBar(content: Text("Password tidak sama")),
     );
     return;
   }
 
-  // Buat object user
+  final existingUser =
+      await DatabaseHelper.instance.getUserByEmail(email);
+
+  if (existingUser != null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Email sudah terdaftar")),
+    );
+    return;
+  }
+
   final user = UserModel(
     email: email,
     password: password,
   );
 
-  // Simpan ke database
-  await DatabaseHelper
-  .instance.insertUser(user);
+  await DatabaseHelper.instance.insertUser(user);
 
   ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text("User berhasil didaftarkan")),
+    const SnackBar(content: Text("Pendaftaran berhasil")),
   );
 
-  // Kosongkan field
-  emailController.clear();
-  passwordController.clear();
-  confirmPasswordController.clear();
+  Navigator.pop(context);
 }
 
 

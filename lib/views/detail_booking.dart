@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:MyField/database/database_helper.dart';
 import 'package:MyField/models/booking_model.dart';
 
+
 class DetailBooking extends StatefulWidget {
   final String namaLapangan;
   final String lokasi;
@@ -237,7 +238,7 @@ class _DetailBookingState extends State<DetailBooking> {
                 ),
               ),
               child: const Text(
-                'Review Lapangan',
+                'Lihat Review',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),

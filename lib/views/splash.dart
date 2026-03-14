@@ -45,6 +45,14 @@ class _SplashScreenTugas10State extends State<SplashScreen> {
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
               ),
+            ),
+            Text(
+              "BETA ",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
             )
           ],
         ),

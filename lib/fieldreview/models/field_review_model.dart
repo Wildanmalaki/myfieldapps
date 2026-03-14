@@ -4,7 +4,7 @@ class FieldReview {
   final String reviewer;
   final String comment;
   final int rating;
-  final DateTime createdAt;
+  final String date;
 
   FieldReview({
     this.id,
@@ -12,28 +12,28 @@ class FieldReview {
     required this.reviewer,
     required this.comment,
     required this.rating,
-    required this.createdAt,
+    required this.date,
   });
 
-  factory FieldReview.fromJson(Map<String, dynamic> json) {
-    return FieldReview(
-      id: json['id'],
-      fieldName: json['field_name'],
-      reviewer: json['reviewer'],
-      comment: json['comment'],
-      rating: json['rating'],
-      createdAt: DateTime.parse(json['created_at']),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'field_name': fieldName,
+      'fieldName': fieldName,
       'reviewer': reviewer,
       'comment': comment,
       'rating': rating,
-      'created_at': createdAt.toIso8601String(),
+      'date': date,
     };
+  }
+
+  factory FieldReview.fromMap(Map<String, dynamic> map) {
+    return FieldReview(
+      id: map['id'],
+      fieldName: map['fieldName'],
+      reviewer: map['reviewer'],
+      comment: map['comment'],
+      rating: map['rating'],
+      date: map['date'],
+    );
   }
 }
