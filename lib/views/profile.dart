@@ -39,7 +39,7 @@ class ProfilePage extends StatelessWidget {
                       const CircleAvatar(
                         radius: 60,
                         backgroundImage: NetworkImage(
-                          "https://scontent-cgk1-2.xx.fbcdn.net/v/t39.30808-1/610964674_2679999182333365_6903091626739272275_n.jpg?stp=dst-jpg_s160x160_tt6&_nc_cat=108&ccb=1-7&_nc_sid=e99d92&_nc_eui2=AeG3ffvtVTA9GRRQUyHkLEFCrZlFi7NRhLOtmUWLs1GEswZh25jZ0vyFISOGLtD9vuGRuiod-AG3b1qxJdVtzXLt&_nc_ohc=R9vTCjBGoHEQ7kNvwEgdCT1&_nc_oc=AdmY2ASZ25NvGE0k9dkgYH5v6XeecXBtt9C0f2IZoYJjp5_qOE6CjE0LWH_fd_USYrU&_nc_zt=24&_nc_ht=scontent-cgk1-2.xx&_nc_gid=aS6GJIQkkseVX1pNVJaAaA&_nc_ss=8&oh=00_Afwv7cN5mnbKEphn6B3URGRGOe30e-_-JDxyn5tXIguKFQ&oe=69B3EA63",
+                          "https://scontent.fcgk12-2.fna.fbcdn.net/v/t39.30808-6/610964674_2679999182333365_6903091626739272275_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=1d70fc&_nc_eui2=AeG3ffvtVTA9GRRQUyHkLEFCrZlFi7NRhLOtmUWLs1GEswZh25jZ0vyFISOGLtD9vuGRuiod-AG3b1qxJdVtzXLt&_nc_ohc=Gkd9m1jgqpUQ7kNvwG37QwQ&_nc_oc=AdlHqpSStbNOz7hIEsx3WVCCjwamSA2bxWJy6S-mPczWNnAH7KCdCEXYUFOXz4SFP9k&_nc_zt=23&_nc_ht=scontent.fcgk12-2.fna&_nc_gid=3E9ZWA7evg_eJOMKnvZvpA&_nc_ss=8&oh=00_AfyajaUDtJnu8ML9d1XQVVCPI4u9ESOIKytIDOPFTGKBSA&oe=69BB4021",
                         ),
                       ),
 
