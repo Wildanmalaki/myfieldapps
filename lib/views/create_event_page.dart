@@ -64,7 +64,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
     return Scaffold(
 
       appBar: AppBar(
-        title: const Text("Create Event"),
+        title: const Text("Buat Event"),
       ),
 
       body: Padding(
@@ -76,7 +76,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
             TextField(
               controller: title,
               decoration: const InputDecoration(
-                labelText: "Event Title",
+                labelText: "Judul Event",
               ),
             ),
 
@@ -84,7 +84,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
 
             DropdownButtonFormField<String>(
               value: selectedSport,
-              hint: const Text("Select Sport"),
+              hint: const Text("Jenis Olahraga"),
               items: sports.map((sport) {
                 return DropdownMenuItem(
                   value: sport,
@@ -103,7 +103,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
             TextField(
               controller: location,
               decoration: const InputDecoration(
-                labelText: "Location",
+                labelText: "Lokasi",
               ),
             ),
 
@@ -112,7 +112,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
             TextField(
               controller: date,
               decoration: const InputDecoration(
-                labelText: "Date",
+                labelText: "Tanggal",
               ),
             ),
 
@@ -121,7 +121,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
             TextField(
               controller: time,
               decoration: const InputDecoration(
-                labelText: "Time",
+                labelText: "Waktu",
               ),
             ),
 
@@ -131,7 +131,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
               controller: players,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
-                labelText: "Players Needed",
+                labelText: "Jumlah Pemain",
               ),
             ),
 
