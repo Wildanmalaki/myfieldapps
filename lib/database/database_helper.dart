@@ -1,4 +1,5 @@
 import 'package:MyField/models/booking_model.dart';
+import 'package:MyField/models/event_model.dart';
 import 'package:MyField/models/user_model.dart';
 import 'package:MyField/fieldreview/models/field_review_model.dart';
 import 'package:path/path.dart';
@@ -55,6 +56,18 @@ class DatabaseHelper {
     date TEXT
   )
   ''');
+  
+  await db.execute('''
+  CREATE TABLE events(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT,
+  sport TEXT,
+  date TEXT,
+  time TEXT,
+  location TEXT,
+  players INTEGER
+)
+''');
 }
 
   // ================= USER =================
@@ -135,4 +148,29 @@ class DatabaseHelper {
 
   return null;
 }
+
+// EVENT 
+Future<int> insertEvent(EventModel event) async {
+  final db = await database;
+  return await db.insert('events', event.toMap());
+}
+
+Future<List<EventModel>> getEvents() async {
+  final db = await database;
+
+  final result = await db.query('events');
+
+  return result.map((e) => EventModel.fromMap(e)).toList();
+}
+
+Future<int> deleteEvent(int id) async {
+  final db = await database;
+
+  return await db.delete(
+    'events',
+    where: 'id=?',
+    whereArgs: [id],
+  );
+}
+
 }
