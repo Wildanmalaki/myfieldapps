@@ -12,52 +12,45 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPage extends State<LoginPage> {
-
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
   void loginUser() async {
+    String email = emailController.text;
+    String password = passwordController.text;
 
-  String email = emailController.text;
-  String password = passwordController.text;
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Email dan Password harus diisi")),
+      );
+      return;
+    }
 
-  if (email.isEmpty || password.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Email dan Password harus diisi")),
-    );
-    return;
+    final user = await DatabaseHelper.instance.loginUser(email, password);
+
+    if (user != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Login berhasil")),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const BottomNavbar(),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Email atau Password salah")),
+      );
+    }
   }
-
-  final user = await DatabaseHelper.instance.loginUser(email, password);
-
-  if (user != null) {
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Login berhasil")),
-    );
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const BottomNavbar(),
-      ),
-    );
-
-  } else {
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Email atau Password salah")),
-    );
-
-  }
-}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
-
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
@@ -66,28 +59,30 @@ class _LoginPage extends State<LoginPage> {
               ),
             ),
           ),
-
           Container(color: Colors.black54),
-
           Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 25),
               child: Column(
                 children: [
-
                   const SizedBox(height: 40),
-
                   const Text(
-                    "Selamat Datang",
+                    "Selamat Datang!",
                     style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
-
+                  const Text(
+                    "Silahkan login terlebih dahulu",
+                    style: TextStyle(
+                      fontSize: 16,
+                      // fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
                   const SizedBox(height: 40),
-
                   TextField(
                     controller: emailController,
                     style: const TextStyle(color: Colors.white),
@@ -102,9 +97,7 @@ class _LoginPage extends State<LoginPage> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 20),
-
                   TextField(
                     controller: passwordController,
                     obscureText: true,
@@ -120,9 +113,7 @@ class _LoginPage extends State<LoginPage> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 30),
-
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -130,9 +121,7 @@ class _LoginPage extends State<LoginPage> {
                       child: const Text("LOGIN"),
                     ),
                   ),
-
                   const SizedBox(height: 20),
-
                   TextButton(
                     onPressed: () {
                       Navigator.push(

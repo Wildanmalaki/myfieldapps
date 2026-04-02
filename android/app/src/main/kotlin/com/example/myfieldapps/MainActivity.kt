@@ -1,4 +1,4 @@
-package com.example.myfieldapps
+package com.wildan.myfield
 
 import io.flutter.embedding.android.FlutterActivity
 
