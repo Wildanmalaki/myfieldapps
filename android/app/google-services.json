@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "166810882548",
+    "project_id": "myfield01",
+    "storage_bucket": "myfield01.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:166810882548:android:f0540bac016575988769a1",
+        "android_client_info": {
+          "package_name": "com.wildan.myfield"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBUG7x-zh-frmHPM5F80bIkV8vj3j0DMRU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
