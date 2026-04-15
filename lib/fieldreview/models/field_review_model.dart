@@ -17,7 +17,6 @@ class FieldReview {
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
       'fieldName': fieldName,
       'reviewer': reviewer,
       'comment': comment,
@@ -28,12 +27,25 @@ class FieldReview {
 
   factory FieldReview.fromMap(Map<String, dynamic> map) {
     return FieldReview(
-      id: map['id'],
-      fieldName: map['fieldName'],
-      reviewer: map['reviewer'],
-      comment: map['comment'],
-      rating: map['rating'],
-      date: map['date'],
+      id: _asInt(map['id']),
+      fieldName: map['fieldName']?.toString() ?? '',
+      reviewer: map['reviewer']?.toString() ?? '',
+      comment: map['comment']?.toString() ?? '',
+      rating: _asInt(map['rating']) ?? 0,
+      date: map['date']?.toString() ?? '',
     );
+  }
+
+  static int? _asInt(dynamic value) {
+    if (value is int) {
+      return value;
+    }
+    if (value is num) {
+      return value.toInt();
+    }
+    if (value is String) {
+      return int.tryParse(value);
+    }
+    return null;
   }
 }

@@ -19,7 +19,6 @@ class EventModel {
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
       'title': title,
       'sport': sport,
       'date': date,
@@ -31,13 +30,26 @@ class EventModel {
 
   factory EventModel.fromMap(Map<String, dynamic> map) {
     return EventModel(
-      id: map['id'],
-      title: map['title'],
-      sport: map['sport'],
-      date: map['date'],
-      time: map['time'],
-      location: map['location'],
-      players: map['players'],
+      id: _asInt(map['id']),
+      title: map['title']?.toString() ?? '',
+      sport: map['sport']?.toString() ?? '',
+      date: map['date']?.toString() ?? '',
+      time: map['time']?.toString() ?? '',
+      location: map['location']?.toString() ?? '',
+      players: _asInt(map['players']) ?? 0,
     );
+  }
+
+  static int? _asInt(dynamic value) {
+    if (value is int) {
+      return value;
+    }
+    if (value is num) {
+      return value.toInt();
+    }
+    if (value is String) {
+      return int.tryParse(value);
+    }
+    return null;
   }
 }

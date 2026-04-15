@@ -12,14 +12,12 @@ class AddReviewPage extends StatefulWidget {
 }
 
 class _AddReviewPageState extends State<AddReviewPage> {
-
   final TextEditingController nameController = TextEditingController();
   final TextEditingController reviewController = TextEditingController();
 
   int rating = 5;
 
   void saveReview() async {
-
     if (nameController.text.isEmpty || reviewController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Nama dan review harus diisi")),
@@ -36,6 +34,7 @@ class _AddReviewPageState extends State<AddReviewPage> {
     );
 
     await DatabaseHelper.instance.insertReview(review);
+    if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Review berhasil dikirim")),
@@ -46,7 +45,6 @@ class _AddReviewPageState extends State<AddReviewPage> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
         title: const Text("Add Field Review"),
@@ -79,17 +77,14 @@ class _AddReviewPageState extends State<AddReviewPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-
                 const Icon(Icons.star, color: Colors.amber),
-
                 const SizedBox(width: 10),
-
                 DropdownButton<int>(
                   value: rating,
-                  items: [1,2,3,4,5]
+                  items: [1, 2, 3, 4, 5]
                       .map((e) => DropdownMenuItem(
                             value: e,
-                            child: Text("$e"),
+                            child: Text('$e'),
                           ))
                       .toList(),
                   onChanged: (value) {

@@ -10,7 +10,6 @@ class CreateEventPage extends StatefulWidget {
 }
 
 class _CreateEventPageState extends State<CreateEventPage> {
-
   final title = TextEditingController();
   final location = TextEditingController();
   final date = TextEditingController();
@@ -28,7 +27,6 @@ class _CreateEventPageState extends State<CreateEventPage> {
   ];
 
   Future saveEvent() async {
-
     if (title.text.isEmpty ||
         location.text.isEmpty ||
         date.text.isEmpty ||
@@ -42,9 +40,9 @@ class _CreateEventPageState extends State<CreateEventPage> {
       return;
     }
 
-    int playerCount = int.tryParse(players.text) ?? 0;
+    final int playerCount = int.tryParse(players.text) ?? 0;
 
-    EventModel event = EventModel(
+    final EventModel event = EventModel(
       title: title.text,
       sport: selectedSport!,
       location: location.text,
@@ -54,15 +52,14 @@ class _CreateEventPageState extends State<CreateEventPage> {
     );
 
     await DatabaseHelper.instance.insertEvent(event);
+    if (!mounted) return;
 
     Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-
       appBar: AppBar(
         title: const Text("Buat Event"),
       ),
@@ -72,7 +69,6 @@ class _CreateEventPageState extends State<CreateEventPage> {
 
         child: ListView(
           children: [
-
             TextField(
               controller: title,
               decoration: const InputDecoration(
@@ -83,7 +79,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
             const SizedBox(height: 16),
 
             DropdownButtonFormField<String>(
-              value: selectedSport,
+              initialValue: selectedSport,
               hint: const Text("Jenis Olahraga"),
               items: sports.map((sport) {
                 return DropdownMenuItem(
@@ -144,7 +140,6 @@ class _CreateEventPageState extends State<CreateEventPage> {
                 child: const Text("Create Event"),
               ),
             )
-
           ],
         ),
       ),

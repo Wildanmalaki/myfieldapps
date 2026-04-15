@@ -1,176 +1,130 @@
+import 'package:MyField/fieldreview/models/field_review_model.dart';
 import 'package:MyField/models/booking_model.dart';
 import 'package:MyField/models/event_model.dart';
 import 'package:MyField/models/user_model.dart';
-import 'package:MyField/fieldreview/models/field_review_model.dart';
-import 'package:path/path.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:MyField/service/firebase_service.dart';
 
 class DatabaseHelper {
-  static final DatabaseHelper instance = DatabaseHelper._init();
-  static Database? _database;
-
   DatabaseHelper._init();
 
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDB('myfield.db');
-    return _database!;
-  }
+  static final DatabaseHelper instance = DatabaseHelper._init();
+  static const String _usersCollection = 'users';
+  static const String _bookingsCollection = 'bookings';
+  static const String _reviewsCollection = 'reviews';
+  static const String _eventsCollection = 'events';
 
-  Future<Database> _initDB(String filePath) async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
+  final FirebaseService _firebaseService = FirebaseService.instance;
 
-    return openDatabase(path, version: 1, onCreate: _createDB);
-  }
-
-  Future _createDB(Database db, int version) async {
-
-  await db.execute('''
-  CREATE TABLE users(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT,
-    password TEXT
-  )
-  ''');
-
-  await db.execute('''
-  CREATE TABLE bookings(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    userId INTEGER,
-    lapangan TEXT,
-    tanggal TEXT,
-    waktu TEXT,
-    status TEXT,
-    harga TEXT
-  )
-  ''');
-
-  await db.execute('''
-  CREATE TABLE reviews(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    fieldName TEXT,
-    reviewer TEXT,
-    comment TEXT,
-    rating INTEGER,
-    date TEXT
-  )
-  ''');
-  
-  await db.execute('''
-  CREATE TABLE events(
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  title TEXT,
-  sport TEXT,
-  date TEXT,
-  time TEXT,
-  location TEXT,
-  players INTEGER
-)
-''');
-}
-
-  // ================= USER =================
-
-  Future<int> insertUser(UserModel user) async {
-    final db = await database;
-    return db.insert('users', user.toMap());
+  Future<int> insertUser(UserModel user) {
+    return _firebaseService.createDocument(
+      collectionPath: _usersCollection,
+      data: user.toMap(),
+      id: user.id,
+    );
   }
 
   Future<UserModel?> loginUser(String email, String password) async {
-    final db = await database;
-
-    final result = await db.query(
-      "users",
-      where: "email=? AND password=?",
-      whereArgs: [email, password],
+    final result = await _firebaseService.getDocumentByFields(
+      collectionPath: _usersCollection,
+      filters: {
+        'email': email,
+        'password': password,
+      },
     );
 
-    if (result.isNotEmpty) {
-      return UserModel.fromMap(result.first);
+    if (result == null) {
+      return null;
     }
 
-    return null;
+    return UserModel.fromMap(result);
   }
 
-  
+  Future<UserModel?> getUserByEmail(String email) async {
+    final result = await _firebaseService.getDocumentByField(
+      collectionPath: _usersCollection,
+      field: 'email',
+      value: email,
+    );
 
-  // ================= BOOKING =================
+    if (result == null) {
+      return null;
+    }
 
-  Future<int> insertBooking(Booking booking) async {
-    final db = await database;
-    return db.insert("bookings", booking.toMap());
+    return UserModel.fromMap(result);
+  }
+
+  Future<int> insertBooking(Booking booking) {
+    return _firebaseService.createDocument(
+      collectionPath: _bookingsCollection,
+      data: booking.toMap(),
+      id: booking.id,
+    );
   }
 
   Future<List<Booking>> getBookings() async {
-    final db = await database;
-    final result = await db.query("bookings");
-    return result.map((e) => Booking.fromMap(e)).toList();
+    final result = await _firebaseService.getDocuments(
+      _bookingsCollection,
+      orderBy: 'id',
+      descending: true,
+    );
+    return result.map(Booking.fromMap).toList();
   }
 
   Future<int> deleteBooking(int id) async {
-    final db = await database;
-    return db.delete("bookings", where: "id=?", whereArgs: [id]);
+    await _firebaseService.deleteDocument(
+      collectionPath: _bookingsCollection,
+      id: id,
+    );
+    return 1;
   }
 
-  // ================= REVIEW =================
-
-  Future<int> insertReview(FieldReview review) async {
-    final db = await database;
-    return db.insert("reviews", review.toMap());
+  Future<int> insertReview(FieldReview review) {
+    return _firebaseService.createDocument(
+      collectionPath: _reviewsCollection,
+      data: review.toMap(),
+      id: review.id,
+    );
   }
 
   Future<List<FieldReview>> getReviews() async {
-    final db = await database;
-    final result = await db.query("reviews", orderBy: "id DESC");
-    return result.map((e) => FieldReview.fromMap(e)).toList();
+    final result = await _firebaseService.getDocuments(
+      _reviewsCollection,
+      orderBy: 'id',
+      descending: true,
+    );
+    return result.map(FieldReview.fromMap).toList();
   }
 
   Future<int> deleteReview(int id) async {
-    final db = await database;
-    return db.delete("reviews", where: "id=?", whereArgs: [id]);
-  }
-  
-
-  Future<UserModel?> getUserByEmail(String email) async {
-
-  final db = await database;
-
-  final result = await db.query(
-    "users",
-    where: "email = ?",
-    whereArgs: [email],
-  );
-
-  if (result.isNotEmpty) {
-    return UserModel.fromMap(result.first);
+    await _firebaseService.deleteDocument(
+      collectionPath: _reviewsCollection,
+      id: id,
+    );
+    return 1;
   }
 
-  return null;
-}
+  Future<int> insertEvent(EventModel event) {
+    return _firebaseService.createDocument(
+      collectionPath: _eventsCollection,
+      data: event.toMap(),
+      id: event.id,
+    );
+  }
 
-// EVENT 
-Future<int> insertEvent(EventModel event) async {
-  final db = await database;
-  return await db.insert('events', event.toMap());
-}
+  Future<List<EventModel>> getEvents() async {
+    final result = await _firebaseService.getDocuments(
+      _eventsCollection,
+      orderBy: 'id',
+      descending: true,
+    );
+    return result.map(EventModel.fromMap).toList();
+  }
 
-Future<List<EventModel>> getEvents() async {
-  final db = await database;
-
-  final result = await db.query('events');
-
-  return result.map((e) => EventModel.fromMap(e)).toList();
-}
-
-Future<int> deleteEvent(int id) async {
-  final db = await database;
-
-  return await db.delete(
-    'events',
-    where: 'id=?',
-    whereArgs: [id],
-  );
-}
-
+  Future<int> deleteEvent(int id) async {
+    await _firebaseService.deleteDocument(
+      collectionPath: _eventsCollection,
+      id: id,
+    );
+    return 1;
+  }
 }

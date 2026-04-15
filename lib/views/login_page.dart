@@ -1,5 +1,4 @@
 import 'package:MyField/database/database_helper.dart';
-import 'package:MyField/models/user_model.dart';
 import 'package:MyField/views/pendaftaran_page.dart';
 import 'package:MyField/widget/bottomnavbar.dart';
 import 'package:flutter/material.dart';
@@ -16,8 +15,8 @@ class _LoginPage extends State<LoginPage> {
   final TextEditingController passwordController = TextEditingController();
 
   void loginUser() async {
-    String email = emailController.text;
-    String password = passwordController.text;
+    final String email = emailController.text;
+    final String password = passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -27,6 +26,7 @@ class _LoginPage extends State<LoginPage> {
     }
 
     final user = await DatabaseHelper.instance.loginUser(email, password);
+    if (!mounted) return;
 
     if (user != null) {
       ScaffoldMessenger.of(context).showSnackBar(

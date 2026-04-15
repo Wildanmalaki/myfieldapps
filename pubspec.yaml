@@ -35,9 +35,10 @@ dependencies:
   lottie: ^3.3.2
   animate_do: ^4.2.0
   path_provider: ^2.1.5
-  sqflite: ^2.4.2
   flutter_launcher_icons: ^0.14.4
   image_picker: ^1.0.77
+  cloud_firestore: ^6.1.0
+  firebase_core: ^4.2.1
 
 dev_dependencies:
   flutter_lints: ^5.0.0
@@ -45,9 +46,6 @@ dev_dependencies:
     sdk: flutter
   intl: ^0.19.0
   shared_preferences: ^2.5.4
-  cloud_firestore: ^6.1.0
-  firebase.auth: ^6.1.2
-  firebase_core: ^4.2.1
   
 flutter_launcher_icons:
   android: "launcher_icon"

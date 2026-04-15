@@ -1,10 +1,7 @@
 import 'package:MyField/fieldreview/view/review_list_page.dart';
-import 'package:flutter/material.dart';
 import 'package:MyField/database/database_helper.dart';
 import 'package:MyField/models/booking_model.dart';
-
-
-
+import 'package:flutter/material.dart';
 
 class DetailBooking extends StatefulWidget {
   final String namaLapangan;
@@ -118,7 +115,7 @@ class _DetailBookingState extends State<DetailBooking> {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Colors.black.withOpacity(0.4), bgColor],
+                colors: [Colors.black.withValues(alpha: 0.4), bgColor],
               ),
             ),
           ),
@@ -149,7 +146,7 @@ class _DetailBookingState extends State<DetailBooking> {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         shape: BoxShape.circle,
       ),
       child: Icon(icon, color: Colors.white, size: 20),
@@ -224,18 +221,18 @@ class _DetailBookingState extends State<DetailBooking> {
             ),
             const SizedBox(width: 8),
             ElevatedButton(
-  child: const Text("Lihat Review"),
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ReviewListPage(
-          fieldName: "Talenta Court",
-        ),
-      ),
-    );
-  },
-)
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ReviewListPage(
+                      fieldName: "Talenta Court",
+                    ),
+                  ),
+                );
+              },
+              child: const Text("Lihat Review"),
+            )
           ],
         ),
       ],
@@ -416,7 +413,7 @@ class _DetailBookingState extends State<DetailBooking> {
                       slot['time'],
                       style: TextStyle(
                         color: isDisabled
-                            ? Colors.white.withOpacity(0.2)
+                            ? Colors.white.withValues(alpha: 0.2)
                             : Colors.white,
                         fontWeight: FontWeight.w600,
                         decoration: isDisabled
@@ -540,10 +537,11 @@ class _DetailBookingState extends State<DetailBooking> {
               );
 
               await DatabaseHelper.instance.insertBooking(booking);
+              if (!mounted) return;
 
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text("Booking berhasil")));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Booking berhasil")),
+              );
 
               Navigator.pop(context);
             },

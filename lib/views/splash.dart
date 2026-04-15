@@ -1,6 +1,5 @@
 import 'package:MyField/views/login_page.dart';
 import 'package:flutter/material.dart';
-import 'dart:async'; // Pastikan import ini ada untuk timer
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -10,14 +9,14 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenTugas10State extends State<SplashScreen> {
-  
   @override
   void initState() {
     super.initState();
     Future.delayed(const Duration(seconds: 3), () {
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) =>LoginPage()), 
+        MaterialPageRoute(builder: (context) => const LoginPage()),
       );
     });
   }
@@ -35,8 +34,7 @@ class _SplashScreenTugas10State extends State<SplashScreen> {
               width: 300,
               height: 300,
             ),
-            
-             SizedBox(height: 5),
+            SizedBox(height: 5),
 
             Text(
               "Selamat Datang di Aplikasi Kami",
@@ -53,7 +51,7 @@ class _SplashScreenTugas10State extends State<SplashScreen> {
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
               ),
-            )
+            ),
           ],
         ),
       ),
