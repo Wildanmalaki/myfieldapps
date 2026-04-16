@@ -10,6 +10,11 @@ class CreateEventPage extends StatefulWidget {
 }
 
 class _CreateEventPageState extends State<CreateEventPage> {
+  final Color bgColor = const Color(0xFF121824);
+  final Color cardColor = const Color(0xFF1E2736);
+  final Color primaryBlue = const Color(0xFF3B82F6);
+  final Color textMuted = const Color(0xFF94A3B8);
+
   final title = TextEditingController();
   final location = TextEditingController();
   final date = TextEditingController();
@@ -26,16 +31,32 @@ class _CreateEventPageState extends State<CreateEventPage> {
     "Tenis",
   ];
 
-  Future saveEvent() async {
+  @override
+  void dispose() {
+    title.dispose();
+    location.dispose();
+    date.dispose();
+    time.dispose();
+    players.dispose();
+    super.dispose();
+  }
+
+  Future<void> saveEvent() async {
     if (title.text.isEmpty ||
         location.text.isEmpty ||
         date.text.isEmpty ||
         time.text.isEmpty ||
         players.text.isEmpty ||
         selectedSport == null) {
-
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Semua field harus diisi")),
+        SnackBar(
+          backgroundColor: const Color(0xFFF87171),
+          content: const Text("Semua field harus diisi"),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
       );
       return;
     }
@@ -54,92 +75,324 @@ class _CreateEventPageState extends State<CreateEventPage> {
     await DatabaseHelper.instance.insertEvent(event);
     if (!mounted) return;
 
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: primaryBlue,
+        content: const Text("Event berhasil dibuat"),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+      ),
+    );
     Navigator.pop(context);
+  }
+
+  Future<void> pickDate() async {
+    final now = DateTime.now();
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: now,
+      firstDate: now.subtract(const Duration(days: 1)),
+      lastDate: DateTime(now.year + 3),
+    );
+
+    if (pickedDate == null) return;
+
+    setState(() {
+      date.text = '${pickedDate.day.toString().padLeft(2, '0')}/'
+          '${pickedDate.month.toString().padLeft(2, '0')}/'
+          '${pickedDate.year}';
+    });
+  }
+
+  Future<void> pickTime() async {
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+
+    if (pickedTime == null) return;
+
+    setState(() {
+      time.text = pickedTime.format(context);
+    });
+  }
+
+  InputDecoration _inputDecoration({
+    required String label,
+    required IconData icon,
+    String? hint,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      prefixIcon: Icon(icon, color: textMuted),
+      labelStyle: TextStyle(color: textMuted),
+      hintStyle: TextStyle(color: textMuted.withValues(alpha: 0.7)),
+      filled: true,
+      fillColor: const Color(0xFF141D2B),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: BorderSide(
+          color: Colors.white.withValues(alpha: 0.06),
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: BorderSide(
+          color: primaryBlue,
+        ),
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+      ),
+    );
+  }
+
+  Widget _buildSectionCard({required List<Widget> children}) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.05),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: bgColor,
       appBar: AppBar(
-        title: const Text("Buat Event"),
+        backgroundColor: bgColor,
+        elevation: 0,
+        centerTitle: false,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          "Buat Event",
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
-
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-
+      body: SafeArea(
+        top: false,
         child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
           children: [
-            TextField(
-              controller: title,
-              decoration: const InputDecoration(
-                labelText: "Judul Event",
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    primaryBlue,
+                    const Color(0xFF1D4ED8),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(28),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 54,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.16),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: const Icon(
+                      Icons.campaign_rounded,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Publikasikan Event Baru",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          "Isi detail event olahraga kamu agar komunitas bisa cepat lihat, tertarik, dan langsung gabung.",
+                          style: TextStyle(
+                            color: Colors.white70,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-
-            const SizedBox(height: 16),
-
-            DropdownButtonFormField<String>(
-              initialValue: selectedSport,
-              hint: const Text("Jenis Olahraga"),
-              items: sports.map((sport) {
-                return DropdownMenuItem(
-                  value: sport,
-                  child: Text(sport),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedSport = value;
-                });
-              },
+            const SizedBox(height: 24),
+            _buildSectionCard(
+              children: [
+                const Text(
+                  "Informasi Event",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  "Lengkapi data utama supaya event kamu mudah ditemukan.",
+                  style: TextStyle(
+                    color: textMuted,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: title,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: _inputDecoration(
+                    label: "Judul Event",
+                    icon: Icons.edit_outlined,
+                    hint: "Contoh: Fun Match Sabtu Pagi",
+                  ),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  initialValue: selectedSport,
+                  dropdownColor: cardColor,
+                  iconEnabledColor: Colors.white,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: _inputDecoration(
+                    label: "Jenis Olahraga",
+                    icon: Icons.sports_soccer_rounded,
+                  ),
+                  hint: Text(
+                    "Pilih olahraga",
+                    style: TextStyle(color: textMuted),
+                  ),
+                  items: sports.map((sport) {
+                    return DropdownMenuItem<String>(
+                      value: sport,
+                      child: Text(
+                        sport,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedSport = value;
+                    });
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: location,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: _inputDecoration(
+                    label: "Lokasi",
+                    icon: Icons.location_on_outlined,
+                    hint: "Masukkan area atau nama venue",
+                  ),
+                ),
+              ],
             ),
-
-            const SizedBox(height: 16),
-
-            TextField(
-              controller: location,
-              decoration: const InputDecoration(
-                labelText: "Lokasi",
-              ),
+            const SizedBox(height: 18),
+            _buildSectionCard(
+              children: [
+                const Text(
+                  "Jadwal & Kapasitas",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  "Tentukan waktu bermain dan jumlah pemain yang dibutuhkan.",
+                  style: TextStyle(
+                    color: textMuted,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: date,
+                  readOnly: true,
+                  onTap: pickDate,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: _inputDecoration(
+                    label: "Tanggal",
+                    icon: Icons.calendar_today_rounded,
+                    hint: "Pilih tanggal event",
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: time,
+                  readOnly: true,
+                  onTap: pickTime,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: _inputDecoration(
+                    label: "Waktu",
+                    icon: Icons.access_time_rounded,
+                    hint: "Pilih jam bermain",
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: players,
+                  keyboardType: TextInputType.number,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: _inputDecoration(
+                    label: "Jumlah Pemain",
+                    icon: Icons.groups_rounded,
+                    hint: "Contoh: 10",
+                  ),
+                ),
+              ],
             ),
-
-            const SizedBox(height: 16),
-
-            TextField(
-              controller: date,
-              decoration: const InputDecoration(
-                labelText: "Tanggal",
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            TextField(
-              controller: time,
-              decoration: const InputDecoration(
-                labelText: "Waktu",
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            TextField(
-              controller: players,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: "Jumlah Pemain",
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
+            const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: saveEvent,
-                child: const Text("Create Event"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryBlue,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                child: const Text(
+                  "Create Event",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
-            )
+            ),
           ],
         ),
       ),

@@ -84,7 +84,7 @@ class _HomePageState extends State<HomePage> {
                           style: TextStyle(color: Colors.grey),
                         ),
                         Text(
-                          widget.currentUser.email,
+                          widget.currentUser.displayName,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
@@ -127,7 +127,7 @@ class _HomePageState extends State<HomePage> {
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 5.0),
                 child: Text(
-                  "${widget.currentUser.email}?",
+                  "${widget.currentUser.displayName}?",
                   style: const TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,

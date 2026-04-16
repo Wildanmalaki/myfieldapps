@@ -58,8 +58,10 @@ class FirebaseService {
     required String field,
     required Object value,
   }) async {
-    final snapshot =
-        await collection(collectionPath).where(field, isEqualTo: value).limit(1).get();
+    final snapshot = await collection(collectionPath)
+        .where(field, isEqualTo: value)
+        .limit(1)
+        .get();
 
     if (snapshot.docs.isEmpty) {
       return null;

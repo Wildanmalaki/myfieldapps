@@ -71,7 +71,7 @@ class ProfilePage extends StatelessWidget {
                 /// NAME
                 Center(
                   child: Text(
-                    currentUser.email,
+                    currentUser.displayName,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 22,
@@ -84,7 +84,9 @@ class ProfilePage extends StatelessWidget {
 
                 Center(
                   child: Text(
-                    "Member since 1945",
+                    currentUser.role == "pemilik lapangan"
+                        ? "Pemilik Lapangan"
+                        : "User Booking",
                     style: TextStyle(color: Colors.grey),
                   ),
                 ),
