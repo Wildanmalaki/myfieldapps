@@ -27,6 +27,26 @@ class _HomePageState extends State<HomePage> {
     "Padel",
   ];
 
+  String get displayFirstName {
+    final username = widget.currentUser.username.trim();
+    final rawName = username.isNotEmpty
+        ? username.split(RegExp(r'\s+')).first.trim()
+        : widget.currentUser.displayName.trim();
+    if (rawName.isEmpty) return "Member";
+
+    final source = rawName.contains('@') ? rawName.split('@').first : rawName;
+    final cleaned = source.replaceAll(RegExp(r'[._-]+'), ' ').trim();
+    final parts = cleaned
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .toList();
+
+    if (parts.isEmpty) return "Member";
+
+    final first = parts.first;
+    return first[0].toUpperCase() + first.substring(1).toLowerCase();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -84,7 +104,7 @@ class _HomePageState extends State<HomePage> {
                           style: TextStyle(color: Colors.grey),
                         ),
                         Text(
-                          widget.currentUser.displayName,
+                          "$displayFirstName!",
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
@@ -127,7 +147,7 @@ class _HomePageState extends State<HomePage> {
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 5.0),
                 child: Text(
-                  "${widget.currentUser.displayName}?",
+                  "$displayFirstName?",
                   style: const TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,

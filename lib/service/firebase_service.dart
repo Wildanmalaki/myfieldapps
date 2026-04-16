@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class FirebaseService {
   FirebaseService._();
@@ -9,6 +13,35 @@ class FirebaseService {
 
   CollectionReference<Map<String, dynamic>> collection(String path) {
     return _firestore.collection(path);
+  }
+
+  List<String> _candidateBuckets() {
+    final options = Firebase.app().options;
+    final configuredBucket = options.storageBucket?.trim() ?? '';
+    final projectId = options.projectId.trim();
+    final candidates = <String>[
+      if (configuredBucket.endsWith('.firebasestorage.app'))
+        configuredBucket.replaceFirst(
+          '.firebasestorage.app',
+          '.appspot.com',
+        ),
+      if (configuredBucket.isNotEmpty) configuredBucket,
+      if (configuredBucket.startsWith('gs://'))
+        configuredBucket.substring(5),
+      if (configuredBucket.endsWith('.appspot.com'))
+        configuredBucket.replaceFirst(
+          '.appspot.com',
+          '.firebasestorage.app',
+        ),
+      if (projectId.isNotEmpty) '$projectId.appspot.com',
+      if (projectId.isNotEmpty) '$projectId.firebasestorage.app',
+    ];
+
+    return candidates
+        .map((bucket) => bucket.trim().replaceFirst('gs://', ''))
+        .where((bucket) => bucket.isNotEmpty)
+        .toSet()
+        .toList();
   }
 
   Future<int> createDocument({
@@ -93,5 +126,67 @@ class FirebaseService {
     required int id,
   }) async {
     await collection(collectionPath).doc(id.toString()).delete();
+  }
+
+  Future<void> updateDocument({
+    required String collectionPath,
+    required int id,
+    required Map<String, dynamic> data,
+  }) async {
+    await collection(collectionPath)
+        .doc(id.toString())
+        .set(data, SetOptions(merge: true));
+  }
+
+  Future<String> uploadProfileImage({
+    required int userId,
+    required File file,
+  }) async {
+    final extension = file.path.split('.').last.toLowerCase();
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final objectPath = 'profile_images/user_${userId}_$timestamp.$extension';
+
+    FirebaseException? lastBucketError;
+
+    for (final bucket in _candidateBuckets()) {
+      final storage = FirebaseStorage.instanceFor(bucket: 'gs://$bucket');
+      final ref = storage.ref().child(objectPath);
+
+      try {
+        final snapshot = await ref.putFile(
+          file,
+          SettableMetadata(contentType: 'image/$extension'),
+        );
+        final uploadedRef = snapshot.ref;
+
+        for (var attempt = 0; attempt < 3; attempt++) {
+          try {
+            await uploadedRef.getMetadata();
+            return await uploadedRef.getDownloadURL();
+          } on FirebaseException catch (e) {
+            if (e.code != 'object-not-found' || attempt == 2) {
+              rethrow;
+            }
+            await Future<void>.delayed(const Duration(milliseconds: 400));
+          }
+        }
+      } on FirebaseException catch (e) {
+        if (e.code == 'bucket-not-found' || e.code == 'object-not-found') {
+          lastBucketError = e;
+          continue;
+        }
+        rethrow;
+      }
+    }
+
+    if (lastBucketError != null) {
+      throw lastBucketError;
+    }
+
+    throw FirebaseException(
+      plugin: 'firebase_storage',
+      code: 'bucket-not-found',
+      message: 'Tidak ada bucket Firebase Storage yang valid untuk dipakai.',
+    );
   }
 }

@@ -1,10 +1,55 @@
+import 'dart:io';
+
+import 'package:MyField/database/database_helper.dart';
+import 'package:MyField/service/firebase_service.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:MyField/models/user_model.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:image_picker/image_picker.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   final UserModel currentUser;
 
   const ProfilePage({super.key, required this.currentUser});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  final ImagePicker _picker = ImagePicker();
+  bool _isUploadingPhoto = false;
+  String _photoUrl = '';
+  int _photoRefreshKey = 0;
+
+  String get displayFullName {
+    final rawName = widget.currentUser.username.trim().isNotEmpty
+        ? widget.currentUser.username.trim()
+        : widget.currentUser.displayName.trim();
+    if (rawName.isEmpty) return "Member";
+
+    final source = rawName.contains('@') ? rawName.split('@').first : rawName;
+    final cleaned = source.replaceAll(RegExp(r'[._-]+'), ' ').trim();
+    final parts = cleaned
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .map(
+          (part) => part[0].toUpperCase() + part.substring(1).toLowerCase(),
+        )
+        .toList();
+
+    if (parts.isEmpty) return "Member";
+
+    return parts.join(' ');
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _photoUrl = widget.currentUser.photoUrl.trim();
+    _photoRefreshKey = DateTime.now().millisecondsSinceEpoch;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,26 +84,56 @@ class ProfilePage extends StatelessWidget {
                 Center(
                   child: Stack(
                     children: [
-                      const CircleAvatar(
+                      CircleAvatar(
                         radius: 60,
-                        backgroundImage: NetworkImage(
-                          "https://scontent.fcgk12-2.fna.fbcdn.net/v/t39.30808-6/610964674_2679999182333365_6903091626739272275_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=1d70fc&_nc_eui2=AeG3ffvtVTA9GRRQUyHkLEFCrZlFi7NRhLOtmUWLs1GEswZh25jZ0vyFISOGLtD9vuGRuiod-AG3b1qxJdVtzXLt&_nc_ohc=Gkd9m1jgqpUQ7kNvwG37QwQ&_nc_oc=AdlHqpSStbNOz7hIEsx3WVCCjwamSA2bxWJy6S-mPczWNnAH7KCdCEXYUFOXz4SFP9k&_nc_zt=23&_nc_ht=scontent.fcgk12-2.fna&_nc_gid=3E9ZWA7evg_eJOMKnvZvpA&_nc_ss=8&oh=00_AfyajaUDtJnu8ML9d1XQVVCPI4u9ESOIKytIDOPFTGKBSA&oe=69BB4021",
-                        ),
+                        backgroundColor: const Color(0xFF0E2A47),
+                        backgroundImage: _buildProfileImage(),
+                        child: _photoUrl.isEmpty
+                            ? Text(
+                                displayFullName[0],
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 34,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              )
+                            : null,
                       ),
-
+                      if (_isUploadingPhoto)
+                        const Positioned.fill(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: Color(0x66000000),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: SizedBox(
+                                width: 28,
+                                height: 28,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       Positioned(
                         bottom: 0,
                         right: 0,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.blue,
-                            shape: BoxShape.circle,
-                          ),
-                          padding: EdgeInsets.all(8),
-                          child: Icon(
-                            Icons.camera_alt,
-                            color: Colors.white,
-                            size: 18,
+                        child: GestureDetector(
+                          onTap: _isUploadingPhoto ? null : _changeProfilePhoto,
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              color: Colors.blue,
+                              shape: BoxShape.circle,
+                            ),
+                            padding: const EdgeInsets.all(8),
+                            child: const Icon(
+                              Icons.camera_alt,
+                              color: Colors.white,
+                              size: 18,
+                            ),
                           ),
                         ),
                       ),
@@ -71,7 +146,7 @@ class ProfilePage extends StatelessWidget {
                 /// NAME
                 Center(
                   child: Text(
-                    currentUser.displayName,
+                    displayFullName,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 22,
@@ -84,7 +159,7 @@ class ProfilePage extends StatelessWidget {
 
                 Center(
                   child: Text(
-                    currentUser.role == "pemilik lapangan"
+                    widget.currentUser.role == "pemilik lapangan"
                         ? "Pemilik Lapangan"
                         : "User Booking",
                     style: TextStyle(color: Colors.grey),
@@ -157,7 +232,6 @@ class ProfilePage extends StatelessWidget {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-
                             Text(
                               "LAPANGAN YANG SUDAH DIBOOKING",
                               style: TextStyle(
@@ -307,7 +381,6 @@ class ProfilePage extends StatelessWidget {
             child: Icon(icon, color: color),
           ),
           SizedBox(width: 12),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -323,10 +396,116 @@ class ProfilePage extends StatelessWidget {
               ],
             ),
           ),
-
           Text(time, style: TextStyle(color: Colors.grey)),
         ],
       ),
+    );
+  }
+
+  ImageProvider? _buildProfileImage() {
+    if (_photoUrl.isEmpty) return null;
+    final separator = _photoUrl.contains('?') ? '&' : '?';
+    return NetworkImage('$_photoUrl${separator}v=$_photoRefreshKey');
+  }
+
+  Future<void> _changeProfilePhoto() async {
+    if (widget.currentUser.id == null) {
+      _showMessage("User belum valid untuk upload foto");
+      return;
+    }
+
+    final pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 90,
+    );
+    if (pickedFile == null || !mounted) return;
+
+    CroppedFile? croppedFile;
+    try {
+      croppedFile = await ImageCropper().cropImage(
+        sourcePath: pickedFile.path,
+        compressFormat: ImageCompressFormat.jpg,
+        compressQuality: 88,
+        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Crop Foto Profil',
+            toolbarColor: const Color(0xFF0E2A47),
+            toolbarWidgetColor: Colors.white,
+            backgroundColor: const Color(0xFF071A2C),
+            activeControlsWidgetColor: Colors.blue,
+            cropStyle: CropStyle.circle,
+            hideBottomControls: false,
+            lockAspectRatio: true,
+          ),
+          IOSUiSettings(
+            title: 'Crop Foto Profil',
+            cropStyle: CropStyle.circle,
+            aspectRatioLockEnabled: true,
+          ),
+        ],
+      );
+    } catch (_) {
+      if (!mounted) return;
+      _showMessage("Cropper tidak berhasil dibuka, foto asli akan dipakai.");
+    }
+
+    if (!mounted) return;
+
+    final selectedImagePath = croppedFile?.path ?? pickedFile.path;
+    final imageFile = File(selectedImagePath);
+
+    setState(() {
+      _isUploadingPhoto = true;
+    });
+
+    try {
+      final downloadUrl = await FirebaseService.instance.uploadProfileImage(
+        userId: widget.currentUser.id!,
+        file: imageFile,
+      );
+
+      await DatabaseHelper.instance.updateUserProfile(
+        userId: widget.currentUser.id!,
+        photoUrl: downloadUrl,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _photoUrl = downloadUrl;
+        _photoRefreshKey = DateTime.now().millisecondsSinceEpoch;
+        widget.currentUser.photoUrl = downloadUrl;
+      });
+      _showMessage("Foto profil berhasil diperbarui");
+    } on FirebaseException catch (e) {
+      if (!mounted) return;
+      final message = switch (e.code) {
+        'unauthorized' =>
+          'Upload ditolak Firebase Storage. Aturan Storage kemungkinan masih butuh login.',
+        'object-not-found' =>
+          'File hasil upload tidak ditemukan di Firebase Storage.',
+        'bucket-not-found' =>
+          'Bucket Firebase Storage belum aktif atau nama bucket tidak cocok.',
+        _ =>
+          'Upload gagal: ${e.code}${e.message == null ? '' : ' - ${e.message}'}',
+      };
+      _showMessage(message);
+    } catch (e) {
+      if (!mounted) return;
+      _showMessage("Upload gagal: $e");
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploadingPhoto = false;
+        });
+      }
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
     );
   }
 }

@@ -4,6 +4,7 @@ class UserModel {
   String email;
   String password;
   String role;
+  String photoUrl;
 
   UserModel({
     this.id,
@@ -11,6 +12,7 @@ class UserModel {
     required this.email,
     required this.password,
     required this.role,
+    this.photoUrl = '',
   });
 
   String get displayName => username.trim().isEmpty ? email : username;
@@ -21,6 +23,7 @@ class UserModel {
       'email': email,
       'password': password,
       'role': role,
+      'photoUrl': photoUrl,
     };
   }
 
@@ -31,6 +34,7 @@ class UserModel {
       email: map['email']?.toString() ?? '',
       password: map['password']?.toString() ?? '',
       role: map['role']?.toString() ?? 'user booking',
+      photoUrl: map['photoUrl']?.toString() ?? '',
     );
   }
 

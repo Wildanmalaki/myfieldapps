@@ -37,8 +37,10 @@ dependencies:
   path_provider: ^2.1.5
   flutter_launcher_icons: ^0.14.4
   image_picker: ^1.0.77
+  image_cropper: ^11.0.0
   cloud_firestore: ^6.1.0
   firebase_core: ^4.2.1
+  firebase_storage: ^13.0.2
 
 dev_dependencies:
   flutter_lints: ^5.0.0

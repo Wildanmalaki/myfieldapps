@@ -53,6 +53,29 @@ class DatabaseHelper {
     return UserModel.fromMap(result);
   }
 
+  Future<void> updateUserProfile({
+    required int userId,
+    String? username,
+    String? photoUrl,
+  }) async {
+    final updates = <String, dynamic>{};
+
+    if (username != null) {
+      updates['username'] = username;
+    }
+    if (photoUrl != null) {
+      updates['photoUrl'] = photoUrl;
+    }
+
+    if (updates.isEmpty) return;
+
+    await _firebaseService.updateDocument(
+      collectionPath: _usersCollection,
+      id: userId,
+      data: updates,
+    );
+  }
+
   Future<int> insertBooking(Booking booking) {
     return _firebaseService.createDocument(
       collectionPath: _bookingsCollection,

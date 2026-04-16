@@ -112,7 +112,7 @@ class _LoginPage extends State<LoginPage> {
                     style: TextStyle(color: titleColor),
                     keyboardType: TextInputType.emailAddress,
                     decoration: _inputDecoration(
-                      hint: "name@domain.com",
+                      hint: "name@gmail.com",
                       prefixIcon: Icons.mail_outline_rounded,
                     ),
                   ),
