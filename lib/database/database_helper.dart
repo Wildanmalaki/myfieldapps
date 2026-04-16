@@ -62,12 +62,20 @@ class DatabaseHelper {
   }
 
   Future<List<Booking>> getBookings() async {
-    final result = await _firebaseService.getDocuments(
-      _bookingsCollection,
-      orderBy: 'id',
-      descending: true,
-    );
-    return result.map(Booking.fromMap).toList();
+    return getBookingsByUser();
+  }
+
+  Future<List<Booking>> getBookingsByUser([int? userId]) async {
+    final result = userId == null
+        ? await _firebaseService.getDocuments(_bookingsCollection)
+        : await _firebaseService.getDocumentsByFields(
+            collectionPath: _bookingsCollection,
+            filters: {'userId': userId},
+          );
+
+    final bookings = result.map(Booking.fromMap).toList();
+    bookings.sort((a, b) => (b.id ?? 0).compareTo(a.id ?? 0));
+    return bookings;
   }
 
   Future<int> deleteBooking(int id) async {

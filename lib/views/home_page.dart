@@ -1,9 +1,12 @@
 import 'package:MyField/views/detail_booking.dart';
+import 'package:MyField/models/user_model.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final UserModel currentUser;
+
+  const HomePage({super.key, required this.currentUser});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -73,16 +76,16 @@ class _HomePageState extends State<HomePage> {
                       child: Icon(Icons.person, color: Colors.white),
                     ),
                     const SizedBox(width: 10),
-                    const Column(
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        const Text(
                           "Selamat datang,",
                           style: TextStyle(color: Colors.grey),
                         ),
                         Text(
-                          "Wildan Malaki",
-                          style: TextStyle(
+                          widget.currentUser.email,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -121,11 +124,11 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
 
-              const Padding(
+              Padding(
                 padding: EdgeInsets.symmetric(horizontal: 5.0),
                 child: Text(
-                  "Wildan?",
-                  style: TextStyle(
+                  "${widget.currentUser.email}?",
+                  style: const TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
                     color: Color.fromARGB(255, 255, 205, 27),
@@ -314,6 +317,7 @@ class _HomePageState extends State<HomePage> {
                 imageUrl:
                     "https://admin.saraga.id/storage/images/14572131-10154585801270699-3099495380002420769-n_1631619103.jpg",
                 tags: ["Football", "Shower", "Parking gratis", "Diskon"],
+                currentUser: widget.currentUser,
               ),
 
               NearbyCard(
@@ -324,6 +328,7 @@ class _HomePageState extends State<HomePage> {
                 imageUrl:
                     "https://asset.ayo.co.id/image/venue/170859795250713.image_cropper_1708597870231.jpg",
                 tags: ["Minisoccer", "Parking", "Free WiFi", "Promo!"],
+                currentUser: widget.currentUser,
               ),
 
               NearbyCard(
@@ -334,6 +339,7 @@ class _HomePageState extends State<HomePage> {
                 imageUrl:
                     "https://asset.ayo.co.id/image/venue/174288649079497.image_cropper_1742886399702.jpg_large.jpeg",
                 tags: ["Futsal", "Badminton", "free minuman", "Diskon!"],
+                currentUser: widget.currentUser,
               ),
               NearbyCard(
                 title: "Talenta Court",
@@ -343,6 +349,7 @@ class _HomePageState extends State<HomePage> {
                 imageUrl:
                     "https://asset.ayo.co.id/image/venue/177095980826513.image_cropper_1770959664162.jpg_large.jpeg",
                 tags: ["Basketball", "Public"],
+                currentUser: widget.currentUser,
               ),
               NearbyCard(
                 title: "Arena Dirgantara Mini Soccer",
@@ -352,6 +359,7 @@ class _HomePageState extends State<HomePage> {
                 imageUrl:
                     "https://asset.ayo.co.id/image/venue/175281821762319.image_cropper_1752818166728.jpg_large.jpeg",
                 tags: ["Basketball", "Public"],
+                currentUser: widget.currentUser,
               ),
 
               SizedBox(height: 100),
@@ -440,6 +448,7 @@ class NearbyCard extends StatelessWidget {
   final String rating;
   final String imageUrl;
   final List<String> tags;
+  final UserModel currentUser;
 
   const NearbyCard({
     super.key,
@@ -449,6 +458,7 @@ class NearbyCard extends StatelessWidget {
     required this.rating,
     required this.imageUrl,
     required this.tags,
+    required this.currentUser,
   });
 
   @override
@@ -505,6 +515,7 @@ class NearbyCard extends StatelessWidget {
                                       rating: double.parse(rating),
                                       gambar: imageUrl,
                                       harga: price,
+                                      currentUser: currentUser,
                                     ),
                             transitionDuration: Duration.zero,
                             reverseTransitionDuration: Duration.zero,

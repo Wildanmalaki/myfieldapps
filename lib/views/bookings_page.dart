@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import '../database/database_helper.dart';
 import '../models/booking_model.dart';
+import '../models/user_model.dart';
 
 class BookingsPage extends StatefulWidget {
-  const BookingsPage({super.key});
+  final UserModel currentUser;
+
+  const BookingsPage({super.key, required this.currentUser});
 
   @override
   State<BookingsPage> createState() => _BookingsPageState();
@@ -15,7 +18,9 @@ class _BookingsPageState extends State<BookingsPage> {
   @override
   void initState() {
     super.initState();
-    bookingList = DatabaseHelper.instance.getBookings();
+    bookingList = DatabaseHelper.instance.getBookingsByUser(
+      widget.currentUser.id,
+    );
   }
 
   @override
@@ -119,7 +124,9 @@ class _BookingsPageState extends State<BookingsPage> {
                   await DatabaseHelper.instance.deleteBooking(booking.id!);
 
                   setState(() {
-                    bookingList = DatabaseHelper.instance.getBookings();
+                    bookingList = DatabaseHelper.instance.getBookingsByUser(
+                      widget.currentUser.id,
+                    );
                   });
                 },
               ),

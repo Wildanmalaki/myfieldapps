@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:MyField/models/user_model.dart';
 
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
+  final UserModel currentUser;
+
+  const ProfilePage({super.key, required this.currentUser});
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +71,7 @@ class ProfilePage extends StatelessWidget {
                 /// NAME
                 Center(
                   child: Text(
-                    "Wildan Malaki",
+                    currentUser.email,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 22,

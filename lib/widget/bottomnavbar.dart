@@ -1,33 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:MyField/models/user_model.dart';
 import 'package:MyField/views/home_page.dart';
 import 'package:MyField/views/bookings_page.dart';
 import 'package:MyField/views/community_page.dart';
 import 'package:MyField/views/profile.dart';
 
 class BottomNavbar extends StatefulWidget {
-  const BottomNavbar({super.key});
+  final UserModel currentUser;
+
+  const BottomNavbar({super.key, required this.currentUser});
 
   @override
   State<BottomNavbar> createState() => _BottomNavbarState();
 }
 
 class _BottomNavbarState extends State<BottomNavbar> {
-
   int index = 0;
-
-  final List<Widget> pages = [
-    const HomePage(),
-    const BookingsPage(),
-    const CommunityPage(),
-    const ProfilePage(),
-  ];
 
   @override
   Widget build(BuildContext context) {
+    final pages = [
+      HomePage(currentUser: widget.currentUser),
+      BookingsPage(currentUser: widget.currentUser),
+      const CommunityPage(),
+      ProfilePage(currentUser: widget.currentUser),
+    ];
+
     return Scaffold(
-
       body: pages[index],
-
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: const Color(0xFF081A2F),

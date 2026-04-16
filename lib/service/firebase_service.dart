@@ -39,6 +39,20 @@ class FirebaseService {
     return snapshot.docs.map((doc) => doc.data()).toList();
   }
 
+  Future<List<Map<String, dynamic>>> getDocumentsByFields({
+    required String collectionPath,
+    required Map<String, Object> filters,
+  }) async {
+    Query<Map<String, dynamic>> query = collection(collectionPath);
+
+    for (final entry in filters.entries) {
+      query = query.where(entry.key, isEqualTo: entry.value);
+    }
+
+    final snapshot = await query.get();
+    return snapshot.docs.map((doc) => doc.data()).toList();
+  }
+
   Future<Map<String, dynamic>?> getDocumentByField({
     required String collectionPath,
     required String field,

@@ -1,4 +1,5 @@
 import 'package:MyField/database/database_helper.dart';
+import 'package:MyField/models/user_model.dart';
 import 'package:MyField/views/pendaftaran_page.dart';
 import 'package:MyField/widget/bottomnavbar.dart';
 import 'package:flutter/material.dart';
@@ -25,7 +26,10 @@ class _LoginPage extends State<LoginPage> {
       return;
     }
 
-    final user = await DatabaseHelper.instance.loginUser(email, password);
+    final UserModel? user = await DatabaseHelper.instance.loginUser(
+      email,
+      password,
+    );
     if (!mounted) return;
 
     if (user != null) {
@@ -36,7 +40,7 @@ class _LoginPage extends State<LoginPage> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => const BottomNavbar(),
+          builder: (context) => BottomNavbar(currentUser: user),
         ),
       );
     } else {

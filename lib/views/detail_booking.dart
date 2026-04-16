@@ -1,6 +1,7 @@
 import 'package:MyField/fieldreview/view/review_list_page.dart';
 import 'package:MyField/database/database_helper.dart';
 import 'package:MyField/models/booking_model.dart';
+import 'package:MyField/models/user_model.dart';
 import 'package:flutter/material.dart';
 
 class DetailBooking extends StatefulWidget {
@@ -9,6 +10,7 @@ class DetailBooking extends StatefulWidget {
   final double rating;
   final String gambar;
   final String harga;
+  final UserModel currentUser;
 
   const DetailBooking({
     super.key,
@@ -17,6 +19,7 @@ class DetailBooking extends StatefulWidget {
     required this.rating,
     required this.gambar,
     required this.harga,
+    required this.currentUser,
   });
 
   @override
@@ -529,8 +532,9 @@ class _DetailBookingState extends State<DetailBooking> {
             onPressed: () async {
               final booking = Booking(
                 lapangan: widget.namaLapangan,
-                userID: 0,
-                tanggal: dates[selectedDateIndex]['date']!,
+                userID: widget.currentUser.id ?? 0,
+                tanggal:
+                    '${dates[selectedDateIndex]['day']}, ${dates[selectedDateIndex]['date']} Maret 2026',
                 waktu: selectedTime,
                 status: "Booked",
                 harga: widget.harga,
