@@ -585,16 +585,13 @@ class _DetailBookingState extends State<DetailBooking> {
           itemBuilder: (context, index) {
             final slot = timeSlots[index];
             final isSelected = selectedTime == slot['time'];
-            final isDisabled = slot['status'] == 'disabled';
 
             return GestureDetector(
-              onTap: isDisabled
-                  ? null
-                  : () {
-                      setState(() {
-                        selectedTime = slot['time'];
-                      });
-                    },
+              onTap: () {
+                setState(() {
+                  selectedTime = slot['time'];
+                });
+              },
               child: Container(
                 decoration: BoxDecoration(
                   color: isSelected ? primaryBlue : localCardColor,
@@ -607,13 +604,8 @@ class _DetailBookingState extends State<DetailBooking> {
                     Text(
                       slot['time'],
                       style: TextStyle(
-                        color: isDisabled
-                            ? Colors.white.withValues(alpha: 0.2)
-                            : (isSelected ? Colors.white : titleColor),
+                        color: isSelected ? Colors.white : titleColor,
                         fontWeight: FontWeight.w600,
-                        decoration: isDisabled
-                            ? TextDecoration.lineThrough
-                            : TextDecoration.none,
                       ),
                     ),
                     if (isSelected) ...[
