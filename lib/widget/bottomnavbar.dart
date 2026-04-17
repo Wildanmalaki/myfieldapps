@@ -19,6 +19,10 @@ class _BottomNavbarState extends State<BottomNavbar> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final selectedColor = isDark
+        ? const Color.fromARGB(255, 255, 205, 27)
+        : const Color(0xFF3A7BFF);
     final pages = [
       HomePage(currentUser: widget.currentUser),
       BookingsPage(currentUser: widget.currentUser),
@@ -30,10 +34,12 @@ class _BottomNavbarState extends State<BottomNavbar> {
       body: pages[index],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        backgroundColor: const Color(0xFF081A2F),
+        backgroundColor:
+            isDark ? const Color(0xFF081A2F) : Colors.white,
 
-        selectedItemColor: const Color(0xFFFFC107),
-        unselectedItemColor: Colors.white70,
+        selectedItemColor: selectedColor,
+        unselectedItemColor:
+            isDark ? Colors.white70 : const Color(0xFF66758A),
 
         currentIndex: index,
 

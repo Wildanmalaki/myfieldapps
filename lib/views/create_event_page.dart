@@ -122,16 +122,18 @@ class _CreateEventPageState extends State<CreateEventPage> {
   InputDecoration _inputDecoration({
     required String label,
     required IconData icon,
+    required Color textMutedColor,
+    required Color fillColor,
     String? hint,
   }) {
     return InputDecoration(
       labelText: label,
       hintText: hint,
-      prefixIcon: Icon(icon, color: textMuted),
-      labelStyle: TextStyle(color: textMuted),
-      hintStyle: TextStyle(color: textMuted.withValues(alpha: 0.7)),
+      prefixIcon: Icon(icon, color: textMutedColor),
+      labelStyle: TextStyle(color: textMutedColor),
+      hintStyle: TextStyle(color: textMutedColor.withValues(alpha: 0.7)),
       filled: true,
-      fillColor: const Color(0xFF141D2B),
+      fillColor: fillColor,
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
         borderSide: BorderSide(
@@ -150,11 +152,14 @@ class _CreateEventPageState extends State<CreateEventPage> {
     );
   }
 
-  Widget _buildSectionCard({required List<Widget> children}) {
+  Widget _buildSectionCard({
+    required Color cardColorValue,
+    required List<Widget> children,
+  }) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: cardColor,
+        color: cardColorValue,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.05),
@@ -169,17 +174,25 @@ class _CreateEventPageState extends State<CreateEventPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final localBgColor = isDark ? bgColor : const Color(0xFFF5F7FB);
+    final localCardColor = isDark ? cardColor : Colors.white;
+    final localSurfaceColor =
+        isDark ? const Color(0xFF141D2B) : const Color(0xFFE8EEF8);
+    final localTextMuted = isDark ? textMuted : const Color(0xFF66758A);
+    final titleColor = isDark ? Colors.white : const Color(0xFF102033);
+
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: localBgColor,
       appBar: AppBar(
-        backgroundColor: bgColor,
+        backgroundColor: localBgColor,
         elevation: 0,
         centerTitle: false,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text(
+        iconTheme: IconThemeData(color: titleColor),
+        title: Text(
           "Buat Event",
           style: TextStyle(
-            color: Colors.white,
+            color: titleColor,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -217,8 +230,8 @@ class _CreateEventPageState extends State<CreateEventPage> {
                       color: Colors.white,
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  const Expanded(
+                const SizedBox(width: 16),
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -246,11 +259,12 @@ class _CreateEventPageState extends State<CreateEventPage> {
             ),
             const SizedBox(height: 24),
             _buildSectionCard(
+              cardColorValue: localCardColor,
               children: [
-                const Text(
+                Text(
                   "Informasi Event",
                   style: TextStyle(
-                    color: Colors.white,
+                    color: titleColor,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -259,40 +273,44 @@ class _CreateEventPageState extends State<CreateEventPage> {
                 Text(
                   "Lengkapi data utama supaya event kamu mudah ditemukan.",
                   style: TextStyle(
-                    color: textMuted,
+                    color: localTextMuted,
                     height: 1.5,
                   ),
                 ),
                 const SizedBox(height: 20),
                 TextField(
                   controller: title,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: titleColor),
                   decoration: _inputDecoration(
                     label: "Judul Event",
                     icon: Icons.edit_outlined,
+                    textMutedColor: localTextMuted,
+                    fillColor: localSurfaceColor,
                     hint: "Contoh: Fun Match Sabtu Pagi",
                   ),
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   initialValue: selectedSport,
-                  dropdownColor: cardColor,
-                  iconEnabledColor: Colors.white,
-                  style: const TextStyle(color: Colors.white),
+                  dropdownColor: localCardColor,
+                  iconEnabledColor: titleColor,
+                  style: TextStyle(color: titleColor),
                   decoration: _inputDecoration(
                     label: "Jenis Olahraga",
                     icon: Icons.sports_soccer_rounded,
+                    textMutedColor: localTextMuted,
+                    fillColor: localSurfaceColor,
                   ),
                   hint: Text(
                     "Pilih olahraga",
-                    style: TextStyle(color: textMuted),
+                    style: TextStyle(color: localTextMuted),
                   ),
                   items: sports.map((sport) {
                     return DropdownMenuItem<String>(
                       value: sport,
                       child: Text(
                         sport,
-                        style: const TextStyle(color: Colors.white),
+                        style: TextStyle(color: titleColor),
                       ),
                     );
                   }).toList(),
@@ -305,10 +323,12 @@ class _CreateEventPageState extends State<CreateEventPage> {
                 const SizedBox(height: 16),
                 TextField(
                   controller: location,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: titleColor),
                   decoration: _inputDecoration(
                     label: "Lokasi",
                     icon: Icons.location_on_outlined,
+                    textMutedColor: localTextMuted,
+                    fillColor: localSurfaceColor,
                     hint: "Masukkan area atau nama venue",
                   ),
                 ),
@@ -316,11 +336,12 @@ class _CreateEventPageState extends State<CreateEventPage> {
             ),
             const SizedBox(height: 18),
             _buildSectionCard(
+              cardColorValue: localCardColor,
               children: [
-                const Text(
+                Text(
                   "Jadwal & Kapasitas",
                   style: TextStyle(
-                    color: Colors.white,
+                    color: titleColor,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -329,7 +350,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
                 Text(
                   "Tentukan waktu bermain dan jumlah pemain yang dibutuhkan.",
                   style: TextStyle(
-                    color: textMuted,
+                    color: localTextMuted,
                     height: 1.5,
                   ),
                 ),
@@ -338,10 +359,12 @@ class _CreateEventPageState extends State<CreateEventPage> {
                   controller: date,
                   readOnly: true,
                   onTap: pickDate,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: titleColor),
                   decoration: _inputDecoration(
                     label: "Tanggal",
                     icon: Icons.calendar_today_rounded,
+                    textMutedColor: localTextMuted,
+                    fillColor: localSurfaceColor,
                     hint: "Pilih tanggal event",
                   ),
                 ),
@@ -350,10 +373,12 @@ class _CreateEventPageState extends State<CreateEventPage> {
                   controller: time,
                   readOnly: true,
                   onTap: pickTime,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: titleColor),
                   decoration: _inputDecoration(
                     label: "Waktu",
                     icon: Icons.access_time_rounded,
+                    textMutedColor: localTextMuted,
+                    fillColor: localSurfaceColor,
                     hint: "Pilih jam bermain",
                   ),
                 ),
@@ -361,10 +386,12 @@ class _CreateEventPageState extends State<CreateEventPage> {
                 TextField(
                   controller: players,
                   keyboardType: TextInputType.number,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: titleColor),
                   decoration: _inputDecoration(
                     label: "Jumlah Pemain",
                     icon: Icons.groups_rounded,
+                    textMutedColor: localTextMuted,
+                    fillColor: localSurfaceColor,
                     hint: "Contoh: 10",
                   ),
                 ),

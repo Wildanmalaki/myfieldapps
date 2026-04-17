@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:MyField/views/detail_booking.dart';
 import 'package:MyField/models/user_model.dart';
 import 'package:flutter/material.dart';
@@ -47,6 +48,21 @@ class _HomePageState extends State<HomePage> {
     return first[0].toUpperCase() + first.substring(1).toLowerCase();
   }
 
+  ImageProvider? get profileImage {
+    final photoUrl = widget.currentUser.photoUrl.trim();
+    if (photoUrl.isEmpty) return null;
+
+    if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
+      return NetworkImage(photoUrl);
+    }
+
+    try {
+      return MemoryImage(base64Decode(photoUrl));
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -75,11 +91,29 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor =
+        isDark ? const Color(0xff0F172A) : const Color(0xFFF5F7FB);
+    final sectionColor = isDark ? Colors.white : const Color(0xFF102033);
+    final mutedColor = isDark ? Colors.grey : const Color(0xFF64748B);
+    final cardColor = isDark ? const Color(0xff1E293B) : Colors.white;
+    final chipColor =
+        isDark ? const Color(0xff1E293B) : const Color(0xFFE8EEF8);
+    final heroAccent = isDark
+        ? const Color.fromARGB(255, 255, 205, 27)
+        : const Color(0xFFF59E0B);
+    final selectedChipColor = isDark ? heroAccent : const Color(0xFF3A7BFF);
+    final accentColor = isDark ? heroAccent : const Color(0xFF3A7BFF);
+    final headerPanelColor = isDark
+        ? Colors.white.withValues(alpha: 0.06)
+        : const Color(0xFFEAF1FB);
+    final headerIconColor = isDark ? accentColor : const Color(0xFF3A7BFF);
+
     return Scaffold(
-      backgroundColor: const Color(0xff0F172A),
+      backgroundColor: backgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 0),
+          padding: const EdgeInsets.fromLTRB(0, 0, 0, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -87,76 +121,99 @@ class _HomePageState extends State<HomePage> {
 
               /// HEADER
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                padding: const EdgeInsets.symmetric(horizontal: 18),
                 child: Row(
                   children: [
-                    const CircleAvatar(
-                      radius: 15,
-                      backgroundColor: Colors.orange,
-                      child: Icon(Icons.person, color: Colors.white),
+                    Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        color: headerPanelColor,
+                        shape: BoxShape.circle,
+                      ),
+                      child: CircleAvatar(
+                        radius: 19,
+                        backgroundColor: const Color(0xFF0B3A66),
+                        backgroundImage: profileImage,
+                        child: profileImage == null
+                            ? Text(
+                                displayFirstName[0],
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
+                            : null,
+                      ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 12),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           "Selamat datang,",
-                          style: TextStyle(color: Colors.grey),
+                          style: TextStyle(
+                            color: mutedColor,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                         Text(
                           "$displayFirstName!",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                          style: TextStyle(
+                            color: sectionColor,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                       ],
                     ),
                     const Spacer(),
                     Container(
-                      padding: const EdgeInsets.all(5),
+                      padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
+                        color: headerPanelColor,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.notifications_none,
-                        color: Colors.white,
+                        color: headerIconColor,
+                        size: 20,
                       ),
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 25),
+              const SizedBox(height: 28),
 
               /// TEXT BESAR
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 5.0),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18),
                 child: Text(
                   "Mau main dimana,",
                   style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    fontSize: 22,
+                    height: 1.2,
+                    fontWeight: FontWeight.w800,
+                    color: sectionColor,
                   ),
                 ),
               ),
 
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 5.0),
+                padding: const EdgeInsets.symmetric(horizontal: 18),
                 child: Text(
                   "$displayFirstName?",
-                  style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Color.fromARGB(255, 255, 205, 27),
+                  style: TextStyle(
+                    fontSize: 22,
+                    height: 1.2,
+                    fontWeight: FontWeight.w800,
+                    color: accentColor,
                   ),
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 22),
 
               /// SEARCH
               Container(
@@ -165,17 +222,17 @@ class _HomePageState extends State<HomePage> {
                 ), // Tambahan margin agar sejajar
                 padding: EdgeInsets.symmetric(horizontal: 15),
                 decoration: BoxDecoration(
-                  color: Color(0xff1E293B),
+                  color: cardColor,
                   borderRadius: BorderRadius.circular(
                     10,
                   ), // Ubah radius agar lebih smooth
                 ),
                 child: TextField(
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(color: sectionColor),
                   decoration: InputDecoration(
-                    icon: Icon(Icons.search, color: Colors.grey),
+                    icon: Icon(Icons.search, color: mutedColor),
                     hintText: "Cari lapanganmu..",
-                    hintStyle: TextStyle(color: Colors.grey),
+                    hintStyle: TextStyle(color: mutedColor),
                     border: InputBorder.none,
                   ),
                 ),
@@ -209,7 +266,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         constraints: BoxConstraints(minWidth: 70),
                         decoration: BoxDecoration(
-                          color: isSelected ? Colors.green : Color(0xff1E293B),
+                          color: isSelected ? selectedChipColor : chipColor,
                           borderRadius: BorderRadius.circular(30),
                         ),
                         child: Text(
@@ -217,7 +274,7 @@ class _HomePageState extends State<HomePage> {
                           softWrap: false,
                           overflow: TextOverflow.visible,
                           style: TextStyle(
-                            color: isSelected ? Colors.white : Colors.grey,
+                            color: isSelected ? Colors.white : mutedColor,
                           ),
                         ),
                       ),
@@ -237,12 +294,12 @@ class _HomePageState extends State<HomePage> {
                     Text(
                       "Lapangan Rekomendasi",
                       style: TextStyle(
-                        color: Colors.white,
+                        color: sectionColor,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text("See All", style: TextStyle(color: Colors.blue)),
+                    Text("See All", style: TextStyle(color: accentColor)),
                   ],
                 ),
               ),
@@ -256,6 +313,7 @@ class _HomePageState extends State<HomePage> {
                   controller: _pageController,
                   children: [
                     FeatureCard(
+                      isDark: isDark,
                       title: "Dekings Arena",
                       price: "Rp 700.000 - 1.500.000",
                       imageurl:
@@ -264,6 +322,7 @@ class _HomePageState extends State<HomePage> {
                       rating: "4.5",
                     ),
                     FeatureCard(
+                      isDark: isDark,
                       title: "Pancoran Soccer Field",
                       price: "Rp 2.240.000 - 3.850.000",
                       imageurl:
@@ -272,6 +331,7 @@ class _HomePageState extends State<HomePage> {
                       rating: "4.5",
                     ),
                     FeatureCard(
+                      isDark: isDark,
                       title: "Lapangan Sepakbola C",
                       price: "Rp 1.500.000 - 4.500.000",
                       imageurl:
@@ -280,6 +340,7 @@ class _HomePageState extends State<HomePage> {
                       rating: "4.5",
                     ),
                     FeatureCard(
+                      isDark: isDark,
                       title: "F7 MINISOCCER ARENA",
                       price: "Rp 500.000 - 1.450.000",
                       imageurl:
@@ -288,6 +349,7 @@ class _HomePageState extends State<HomePage> {
                       rating: "4.5",
                     ),
                     FeatureCard(
+                      isDark: isDark,
                       title: "Social Padel House Menteng",
                       price: "Rp 180.000 - 400.000",
                       imageurl:
@@ -296,6 +358,7 @@ class _HomePageState extends State<HomePage> {
                       rating: "4.5",
                     ),
                     FeatureCard(
+                      isDark: isDark,
                       title: "BBC Bali",
                       price: "Rp 1.000.000 - 2.500.000",
                       imageurl:
@@ -316,13 +379,13 @@ class _HomePageState extends State<HomePage> {
                     Text(
                       "Lapangan Terdekat",
                       style: TextStyle(
-                        color: Colors.white,
+                        color: sectionColor,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Spacer(),
-                    Icon(Icons.filter_list, color: Colors.white),
+                    Icon(Icons.filter_list, color: sectionColor),
                   ],
                 ),
               ),
@@ -392,6 +455,7 @@ class _HomePageState extends State<HomePage> {
 }
 
 class FeatureCard extends StatelessWidget {
+  final bool isDark;
   final String title;
   final String price;
   final String imageurl;
@@ -400,6 +464,7 @@ class FeatureCard extends StatelessWidget {
 
   const FeatureCard({
     super.key,
+    required this.isDark,
     required this.title,
     required this.price,
     required this.imageurl,
@@ -409,12 +474,16 @@ class FeatureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cardColor = isDark ? const Color(0xff1E293B) : Colors.white;
+    final textColor = isDark ? Colors.white : const Color(0xFF102033);
+    final mutedColor = isDark ? Colors.white70 : const Color(0xFF66758A);
+
     return Container(
       width: 300,
       margin: const EdgeInsets.only(right: 15),
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: const Color(0xff1E293B),
+        color: cardColor,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -433,25 +502,25 @@ class FeatureCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             title,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: textColor,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 5),
-          Text(price, style: const TextStyle(color: Colors.white)),
+          Text(price, style: TextStyle(color: textColor)),
           const SizedBox(height: 5),
           Row(
             children: [
-              Text(location, style: const TextStyle(color: Colors.white)),
+              Text(location, style: TextStyle(color: mutedColor)),
               const Spacer(),
-              const Icon(Icons.location_on_outlined, color: Colors.white),
+              Icon(Icons.location_on_outlined, color: mutedColor),
             ],
           ),
           const SizedBox(height: 5),
           Row(
             children: [
-              Text(rating, style: const TextStyle(color: Colors.white)),
+              Text(rating, style: TextStyle(color: textColor)),
               const Icon(Icons.star, color: Colors.amber, size: 20),
             ],
           ),
@@ -483,11 +552,16 @@ class NearbyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xff1E293B) : Colors.white;
+    final titleColor = isDark ? Colors.white : const Color(0xFF102033);
+    final mutedColor = isDark ? Colors.grey : const Color(0xFF66758A);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 15, left: 10, right: 10),
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: const Color(0xff1E293B),
+        color: cardColor,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -504,7 +578,7 @@ class NearbyCard extends StatelessWidget {
                       child: Text(
                         title,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: titleColor,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -513,7 +587,7 @@ class NearbyCard extends StatelessWidget {
                     /// PERUBAHAN ADA DI SINI: TextButton untuk Booking
                     TextButton(
                       style: TextButton.styleFrom(
-                        foregroundColor: Colors.blue,
+                        foregroundColor: const Color(0xFF3A7BFF),
                         splashFactory: NoSplash.splashFactory,
                         overlayColor: Colors.transparent,
                         padding: EdgeInsets.symmetric(
@@ -551,11 +625,11 @@ class NearbyCard extends StatelessWidget {
                   children: [
                     Icon(Icons.location_on, size: 14, color: Colors.grey),
                     SizedBox(width: 4),
-                    Text(distance, style: TextStyle(color: Colors.grey)),
+                    Text(distance, style: TextStyle(color: mutedColor)),
                     SizedBox(width: 10),
                     Icon(Icons.star, size: 14, color: Colors.amber),
                     SizedBox(width: 3),
-                    Text(rating, style: TextStyle(color: Colors.grey)),
+                    Text(rating, style: TextStyle(color: mutedColor)),
                   ],
                 ),
                 SizedBox(height: 6),
@@ -565,12 +639,19 @@ class NearbyCard extends StatelessWidget {
                     return Container(
                       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: Colors.black26,
+                        color: isDark
+                            ? Colors.black26
+                            : const Color(0xFFE8EEF8),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         tag,
-                        style: TextStyle(color: Colors.white, fontSize: 11),
+                        style: TextStyle(
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF102033),
+                          fontSize: 11,
+                        ),
                       ),
                     );
                   }).toList(),

@@ -53,6 +53,19 @@ class DatabaseHelper {
     return UserModel.fromMap(result);
   }
 
+  Future<UserModel?> getUserById(int userId) async {
+    final result = await _firebaseService.getDocumentById(
+      collectionPath: _usersCollection,
+      id: userId,
+    );
+
+    if (result == null) {
+      return null;
+    }
+
+    return UserModel.fromMap(result);
+  }
+
   Future<void> updateUserProfile({
     required int userId,
     String? username,

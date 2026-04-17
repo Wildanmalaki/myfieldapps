@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -15,6 +16,35 @@ class FirebaseService {
     return _firestore.collection(path);
   }
 
+  Future<String> _uploadAndResolveUrl({
+    required Reference ref,
+    required Uint8List bytes,
+    required SettableMetadata metadata,
+  }) async {
+    await ref.putData(bytes, metadata);
+
+    FirebaseException? lastError;
+
+    for (var attempt = 0; attempt < 8; attempt++) {
+      try {
+        return await ref.getDownloadURL();
+      } on FirebaseException catch (e) {
+        lastError = e;
+        if (e.code != 'object-not-found' || attempt == 7) {
+          rethrow;
+        }
+        await Future<void>.delayed(Duration(milliseconds: 350 * (attempt + 1)));
+      }
+    }
+
+    throw lastError ??
+        FirebaseException(
+          plugin: 'firebase_storage',
+          code: 'unknown',
+          message: 'Tidak berhasil mendapatkan URL file upload.',
+        );
+  }
+
   List<String> _candidateBuckets() {
     final options = Firebase.app().options;
     final configuredBucket = options.storageBucket?.trim() ?? '';
@@ -26,8 +56,7 @@ class FirebaseService {
           '.appspot.com',
         ),
       if (configuredBucket.isNotEmpty) configuredBucket,
-      if (configuredBucket.startsWith('gs://'))
-        configuredBucket.substring(5),
+      if (configuredBucket.startsWith('gs://')) configuredBucket.substring(5),
       if (configuredBucket.endsWith('.appspot.com'))
         configuredBucket.replaceFirst(
           '.appspot.com',
@@ -121,6 +150,15 @@ class FirebaseService {
     return snapshot.docs.first.data();
   }
 
+  Future<Map<String, dynamic>?> getDocumentById({
+    required String collectionPath,
+    required int id,
+  }) async {
+    final snapshot = await collection(collectionPath).doc(id.toString()).get();
+
+    return snapshot.data();
+  }
+
   Future<void> deleteDocument({
     required String collectionPath,
     required int id,
@@ -145,6 +183,28 @@ class FirebaseService {
     final extension = file.path.split('.').last.toLowerCase();
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final objectPath = 'profile_images/user_${userId}_$timestamp.$extension';
+    final contentType = switch (extension) {
+      'jpg' || 'jpeg' => 'image/jpeg',
+      'png' => 'image/png',
+      'webp' => 'image/webp',
+      'gif' => 'image/gif',
+      _ => 'application/octet-stream',
+    };
+    final metadata = SettableMetadata(contentType: contentType);
+    final bytes = await file.readAsBytes();
+
+    try {
+      final ref = FirebaseStorage.instance.ref().child(objectPath);
+      return await _uploadAndResolveUrl(
+        ref: ref,
+        bytes: bytes,
+        metadata: metadata,
+      );
+    } on FirebaseException catch (e) {
+      if (e.code != 'bucket-not-found' && e.code != 'object-not-found') {
+        rethrow;
+      }
+    }
 
     FirebaseException? lastBucketError;
 
@@ -153,23 +213,11 @@ class FirebaseService {
       final ref = storage.ref().child(objectPath);
 
       try {
-        final snapshot = await ref.putFile(
-          file,
-          SettableMetadata(contentType: 'image/$extension'),
+        return await _uploadAndResolveUrl(
+          ref: ref,
+          bytes: bytes,
+          metadata: metadata,
         );
-        final uploadedRef = snapshot.ref;
-
-        for (var attempt = 0; attempt < 3; attempt++) {
-          try {
-            await uploadedRef.getMetadata();
-            return await uploadedRef.getDownloadURL();
-          } on FirebaseException catch (e) {
-            if (e.code != 'object-not-found' || attempt == 2) {
-              rethrow;
-            }
-            await Future<void>.delayed(const Duration(milliseconds: 400));
-          }
-        }
       } on FirebaseException catch (e) {
         if (e.code == 'bucket-not-found' || e.code == 'object-not-found') {
           lastBucketError = e;

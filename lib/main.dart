@@ -1,8 +1,9 @@
 import 'package:MyField/fieldreview/view/add_review_page.dart';
-import 'package:MyField/views/splash.dart';
-import 'package:flutter/material.dart';
 import 'package:MyField/firebase_options.dart';
+import 'package:MyField/views/settings_page.dart';
+import 'package:MyField/views/splash.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,33 +16,45 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        // colorScheme: .fromSeed(seedColor: const Color.fromARGB(255, 0, 0, 0)),
-      ),
-      home: SplashScreen(),
-      routes: {
-  '/reviews': (context) => const AddReviewPage(fieldName: "Talenta Court"),
-},
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: AppThemeController.themeMode,
+      builder: (context, themeMode, _) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          themeMode: themeMode,
+          theme: ThemeData(
+            brightness: Brightness.light,
+            scaffoldBackgroundColor: const Color(0xFFF5F7FB),
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF3A7BFF),
+              brightness: Brightness.light,
+            ),
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Color(0xFFF5F7FB),
+              foregroundColor: Color(0xFF102033),
+            ),
+          ),
+          darkTheme: ThemeData(
+            brightness: Brightness.dark,
+            scaffoldBackgroundColor: const Color(0xFF071A2C),
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF3A7BFF),
+              brightness: Brightness.dark,
+            ),
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Color(0xFF071A2C),
+              foregroundColor: Colors.white,
+            ),
+          ),
+          home: SplashScreen(),
+          routes: {
+            '/reviews': (context) =>
+                const AddReviewPage(fieldName: 'Talenta Court'),
+          },
+        );
+      },
     );
   }
 }

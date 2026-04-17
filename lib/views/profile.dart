@@ -1,10 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:MyField/database/database_helper.dart';
-import 'package:MyField/service/firebase_service.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:MyField/models/user_model.dart';
+import 'package:MyField/views/settings_page.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -49,12 +49,20 @@ class _ProfilePageState extends State<ProfilePage> {
     super.initState();
     _photoUrl = widget.currentUser.photoUrl.trim();
     _photoRefreshKey = DateTime.now().millisecondsSinceEpoch;
+    _refreshProfileFromDatabase();
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor =
+        isDark ? const Color(0xFF071A2C) : const Color(0xFFF5F7FB);
+    final cardColor = isDark ? const Color(0xFF0E2A47) : Colors.white;
+    final titleColor = isDark ? Colors.white : const Color(0xFF102033);
+    final subtitleColor = isDark ? Colors.grey : const Color(0xFF66758A);
+
     return Scaffold(
-      backgroundColor: Color(0xFF071A2C),
+      backgroundColor: backgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -69,12 +77,22 @@ class _ProfilePageState extends State<ProfilePage> {
                     Text(
                       "My Profile",
                       style: TextStyle(
-                        color: Colors.white,
+                        color: titleColor,
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Icon(Icons.settings, color: Colors.white),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const SettingsPage(),
+                          ),
+                        );
+                      },
+                      icon: Icon(Icons.settings, color: titleColor),
+                    ),
                   ],
                 ),
 
@@ -86,7 +104,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     children: [
                       CircleAvatar(
                         radius: 60,
-                        backgroundColor: const Color(0xFF0E2A47),
+                        backgroundColor: cardColor,
                         backgroundImage: _buildProfileImage(),
                         child: _photoUrl.isEmpty
                             ? Text(
@@ -148,7 +166,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: Text(
                     displayFullName,
                     style: TextStyle(
-                      color: Colors.white,
+                      color: titleColor,
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
@@ -162,7 +180,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     widget.currentUser.role == "pemilik lapangan"
                         ? "Pemilik Lapangan"
                         : "User Booking",
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(color: subtitleColor),
                   ),
                 ),
 
@@ -173,6 +191,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(
                         horizontal: 30,
                         vertical: 12,
@@ -183,7 +202,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     icon: Icon(Icons.edit),
                     label: Text("Edit Profile"),
-                    onPressed: () {},
+                    onPressed: _showEditProfileDialog,
                   ),
                 ),
 
@@ -193,10 +212,10 @@ class _ProfilePageState extends State<ProfilePage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       "STATS",
                       style: TextStyle(
-                        color: Colors.white,
+                        color: titleColor,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
@@ -217,7 +236,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0E2A47),
+                          color: cardColor,
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Column(
@@ -227,7 +246,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             Text(
                               "100",
                               style: TextStyle(
-                                color: Colors.white,
+                                color: titleColor,
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -235,7 +254,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             Text(
                               "LAPANGAN YANG SUDAH DIBOOKING",
                               style: TextStyle(
-                                color: Colors.grey,
+                                color: subtitleColor,
                                 fontSize: 12,
                               ),
                             ),
@@ -251,7 +270,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Container(
                         padding: EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Color(0xFF0E2A47),
+                          color: cardColor,
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Column(
@@ -261,14 +280,14 @@ class _ProfilePageState extends State<ProfilePage> {
                             Text(
                               "64%",
                               style: TextStyle(
-                                color: Colors.white,
+                                color: titleColor,
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             Text(
                               "WIN RATE",
-                              style: TextStyle(color: Colors.grey),
+                              style: TextStyle(color: subtitleColor),
                             ),
                           ],
                         ),
@@ -323,7 +342,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 Text(
                   "History Lapangan",
                   style: TextStyle(
-                    color: Colors.white,
+                    color: titleColor,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -367,11 +386,16 @@ class _ProfilePageState extends State<ProfilePage> {
     Color color,
     Image imageUrl,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final localCardColor = isDark ? const Color(0xFF0E2A47) : Colors.white;
+    final localTitleColor = isDark ? Colors.white : const Color(0xFF102033);
+    final localSubtitleColor = isDark ? Colors.grey : const Color(0xFF66758A);
+
     return Container(
       margin: EdgeInsets.only(bottom: 12),
       padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Color(0xFF0E2A47),
+        color: localCardColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -388,15 +412,15 @@ class _ProfilePageState extends State<ProfilePage> {
                 Text(
                   title,
                   style: TextStyle(
-                    color: Colors.white,
+                    color: localTitleColor,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(subtitle, style: TextStyle(color: Colors.grey)),
+                Text(subtitle, style: TextStyle(color: localSubtitleColor)),
               ],
             ),
           ),
-          Text(time, style: TextStyle(color: Colors.grey)),
+          Text(time, style: TextStyle(color: localSubtitleColor)),
         ],
       ),
     );
@@ -404,8 +428,162 @@ class _ProfilePageState extends State<ProfilePage> {
 
   ImageProvider? _buildProfileImage() {
     if (_photoUrl.isEmpty) return null;
-    final separator = _photoUrl.contains('?') ? '&' : '?';
-    return NetworkImage('$_photoUrl${separator}v=$_photoRefreshKey');
+
+    if (_photoUrl.startsWith('http://') || _photoUrl.startsWith('https://')) {
+      final separator = _photoUrl.contains('?') ? '&' : '?';
+      return NetworkImage('$_photoUrl${separator}v=$_photoRefreshKey');
+    }
+
+    try {
+      return MemoryImage(base64Decode(_photoUrl));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _refreshProfileFromDatabase() async {
+    final userId = widget.currentUser.id;
+    if (userId == null) return;
+
+    try {
+      final latestUser = await DatabaseHelper.instance.getUserById(userId);
+      if (!mounted || latestUser == null) return;
+
+      final latestPhotoUrl = latestUser.photoUrl.trim();
+      final latestUsername = latestUser.username;
+      if (latestPhotoUrl == _photoUrl &&
+          latestUsername == widget.currentUser.username) {
+        return;
+      }
+
+      setState(() {
+        _photoUrl = latestPhotoUrl;
+        widget.currentUser.photoUrl = latestPhotoUrl;
+        widget.currentUser.username = latestUsername;
+        _photoRefreshKey = DateTime.now().millisecondsSinceEpoch;
+      });
+    } catch (_) {
+      // Keep current UI state if refresh fails.
+    }
+  }
+
+  Future<void> _showEditProfileDialog() async {
+    final userId = widget.currentUser.id;
+    if (userId == null) {
+      _showMessage("User belum valid untuk diedit");
+      return;
+    }
+
+    final controller = TextEditingController(text: widget.currentUser.username);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final titleColor = isDark ? Colors.white : const Color(0xFF102033);
+    final subtitleColor =
+        isDark ? Colors.grey.shade400 : const Color(0xFF66758A);
+    final cardColor = isDark ? const Color(0xFF0E2A47) : Colors.white;
+    final inputFillColor =
+        isDark ? const Color(0xFF102A44) : const Color(0xFFF1F5F9);
+
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: cardColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22),
+          ),
+          title: Text(
+            'Edit Profile',
+            style: TextStyle(
+              color: titleColor,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Ubah nama profil yang ingin ditampilkan di aplikasi.',
+                style: TextStyle(
+                  color: subtitleColor,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                textCapitalization: TextCapitalization.words,
+                style: TextStyle(color: titleColor),
+                decoration: InputDecoration(
+                  hintText: 'Masukkan nama baru',
+                  hintStyle: TextStyle(color: subtitleColor),
+                  filled: true,
+                  fillColor: inputFillColor,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(
+                'Batal',
+                style: TextStyle(color: subtitleColor),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              onPressed: () {
+                Navigator.pop(dialogContext, controller.text.trim());
+              },
+              child: const Text('Simpan'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (!mounted || newName == null) return;
+
+    final cleanedName = newName.trim();
+    if (cleanedName.isEmpty) {
+      _showMessage("Nama profil tidak boleh kosong");
+      return;
+    }
+
+    if (cleanedName == widget.currentUser.username.trim()) {
+      return;
+    }
+
+    try {
+      await DatabaseHelper.instance.updateUserProfile(
+        userId: userId,
+        username: cleanedName,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        widget.currentUser.username = cleanedName;
+      });
+
+      _showMessage("Profil berhasil diperbarui");
+      await _refreshProfileFromDatabase();
+    } catch (e) {
+      if (!mounted) return;
+      _showMessage("Update profil gagal: $e");
+    }
   }
 
   Future<void> _changeProfilePhoto() async {
@@ -417,6 +595,8 @@ class _ProfilePageState extends State<ProfilePage> {
     final pickedFile = await _picker.pickImage(
       source: ImageSource.gallery,
       imageQuality: 90,
+      maxWidth: 512,
+      maxHeight: 512,
     );
     if (pickedFile == null || !mounted) return;
 
@@ -460,37 +640,29 @@ class _ProfilePageState extends State<ProfilePage> {
     });
 
     try {
-      final downloadUrl = await FirebaseService.instance.uploadProfileImage(
-        userId: widget.currentUser.id!,
-        file: imageFile,
-      );
+      final imageBytes = await imageFile.readAsBytes();
+      final encodedImage = base64Encode(imageBytes);
+
+      if (encodedImage.length > 700000) {
+        throw Exception(
+          'Ukuran foto masih terlalu besar. Coba pilih foto lain yang lebih kecil.',
+        );
+      }
 
       await DatabaseHelper.instance.updateUserProfile(
         userId: widget.currentUser.id!,
-        photoUrl: downloadUrl,
+        photoUrl: encodedImage,
       );
 
       if (!mounted) return;
 
       setState(() {
-        _photoUrl = downloadUrl;
+        _photoUrl = encodedImage;
         _photoRefreshKey = DateTime.now().millisecondsSinceEpoch;
-        widget.currentUser.photoUrl = downloadUrl;
+        widget.currentUser.photoUrl = encodedImage;
       });
+      await _refreshProfileFromDatabase();
       _showMessage("Foto profil berhasil diperbarui");
-    } on FirebaseException catch (e) {
-      if (!mounted) return;
-      final message = switch (e.code) {
-        'unauthorized' =>
-          'Upload ditolak Firebase Storage. Aturan Storage kemungkinan masih butuh login.',
-        'object-not-found' =>
-          'File hasil upload tidak ditemukan di Firebase Storage.',
-        'bucket-not-found' =>
-          'Bucket Firebase Storage belum aktif atau nama bucket tidak cocok.',
-        _ =>
-          'Upload gagal: ${e.code}${e.message == null ? '' : ' - ${e.message}'}',
-      };
-      _showMessage(message);
     } catch (e) {
       if (!mounted) return;
       _showMessage("Upload gagal: $e");

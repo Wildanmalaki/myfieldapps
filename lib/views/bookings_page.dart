@@ -33,8 +33,14 @@ class _BookingsPageState extends State<BookingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDark ? bgColor : const Color(0xFFF5F7FB);
+    final localCardColor = isDark ? cardColor : Colors.white;
+    final localTextMuted = isDark ? textMuted : const Color(0xFF66758A);
+    final titleColor = isDark ? Colors.white : const Color(0xFF102033);
+
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: backgroundColor,
       body: FutureBuilder<List<Booking>>(
         future: bookingList,
         builder: (context, snapshot) {
@@ -49,6 +55,9 @@ class _BookingsPageState extends State<BookingsPage> {
               icon: Icons.error_outline,
               title: "Riwayat belum bisa dimuat",
               subtitle: "Coba buka lagi beberapa saat lagi.",
+              cardColorValue: localCardColor,
+              textMutedValue: localTextMuted,
+              titleColor: titleColor,
             );
           }
 
@@ -56,7 +65,7 @@ class _BookingsPageState extends State<BookingsPage> {
 
           return RefreshIndicator(
             color: primaryBlue,
-            backgroundColor: cardColor,
+            backgroundColor: localCardColor,
             onRefresh: () async {
               setState(_reloadBookings);
               await bookingList;
@@ -64,7 +73,7 @@ class _BookingsPageState extends State<BookingsPage> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 120),
               children: [
-                _buildHeader(bookings.length),
+                _buildHeader(bookings.length, localCardColor, localTextMuted, titleColor),
                 const SizedBox(height: 24),
                 if (bookings.isEmpty)
                   _buildMessageState(
@@ -72,9 +81,17 @@ class _BookingsPageState extends State<BookingsPage> {
                     title: "Belum ada booking",
                     subtitle:
                         "Booking lapangan pertama kamu akan muncul di sini.",
+                    cardColorValue: localCardColor,
+                    textMutedValue: localTextMuted,
+                    titleColor: titleColor,
                   )
                 else
-                  ...bookings.map(bookingCard),
+                  ...bookings.map((booking) => bookingCard(
+                        booking,
+                        localCardColor,
+                        localTextMuted,
+                        titleColor,
+                      )),
               ],
             ),
           );
@@ -83,7 +100,12 @@ class _BookingsPageState extends State<BookingsPage> {
     );
   }
 
-  Widget _buildHeader(int totalBookings) {
+  Widget _buildHeader(
+    int totalBookings,
+    Color cardColorValue,
+    Color textMutedValue,
+    Color titleColor,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -93,8 +115,8 @@ class _BookingsPageState extends State<BookingsPage> {
         ),
         Text(
           "Riwayat Booking",
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: titleColor,
             fontSize: 28,
             fontWeight: FontWeight.bold,
           ),
@@ -102,7 +124,7 @@ class _BookingsPageState extends State<BookingsPage> {
         const SizedBox(height: 8),
         Text(
           "Pantau semua jadwal lapangan yang sudah kamu pesan.",
-          style: TextStyle(color: textMuted, fontSize: 14),
+          style: TextStyle(color: textMutedValue, fontSize: 14),
         ),
         const SizedBox(height: 20),
         Container(
@@ -164,13 +186,16 @@ class _BookingsPageState extends State<BookingsPage> {
     required IconData icon,
     required String title,
     required String subtitle,
+    required Color cardColorValue,
+    required Color textMutedValue,
+    required Color titleColor,
   }) {
     return Padding(
       padding: const EdgeInsets.only(top: 80),
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: cardColor,
+          color: cardColorValue,
           borderRadius: BorderRadius.circular(24),
         ),
         child: Column(
@@ -188,8 +213,8 @@ class _BookingsPageState extends State<BookingsPage> {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: titleColor,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -198,7 +223,7 @@ class _BookingsPageState extends State<BookingsPage> {
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: TextStyle(color: textMuted, fontSize: 14),
+              style: TextStyle(color: textMutedValue, fontSize: 14),
             ),
           ],
         ),
@@ -206,15 +231,23 @@ class _BookingsPageState extends State<BookingsPage> {
     );
   }
 
-  Widget bookingCard(Booking booking) {
+  Widget bookingCard(
+    Booking booking,
+    Color cardColorValue,
+    Color textMutedValue,
+    Color titleColor,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: cardColor,
+        color: cardColorValue,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.05),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : const Color(0xFFE2EAF5),
         ),
       ),
       child: Column(
@@ -240,10 +273,10 @@ class _BookingsPageState extends State<BookingsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "MyField",
                       style: TextStyle(
-                        color: Colors.white70,
+                        color: textMutedValue,
                         fontWeight: FontWeight.w600,
                         fontSize: 13,
                       ),
@@ -251,8 +284,8 @@ class _BookingsPageState extends State<BookingsPage> {
                     const SizedBox(height: 4),
                     Text(
                       booking.lapangan,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: titleColor,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
@@ -267,7 +300,9 @@ class _BookingsPageState extends State<BookingsPage> {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.03),
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.03)
+                  : const Color(0xFFF1F5F9),
               borderRadius: BorderRadius.circular(18),
             ),
             child: Column(
@@ -286,7 +321,7 @@ class _BookingsPageState extends State<BookingsPage> {
             children: [
               Text(
                 "ID Booking #${booking.id ?? '-'}",
-                style: TextStyle(color: textMuted, fontSize: 12),
+                style: TextStyle(color: textMutedValue, fontSize: 12),
               ),
               TextButton.icon(
                 style: TextButton.styleFrom(
@@ -309,15 +344,18 @@ class _BookingsPageState extends State<BookingsPage> {
   }
 
   Widget _buildInfoRow(IconData icon, String label) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final infoTextColor = isDark ? Colors.white : const Color(0xFF102033);
+    final infoMuted = isDark ? textMuted : const Color(0xFF66758A);
     return Row(
       children: [
-        Icon(icon, color: textMuted, size: 18),
+        Icon(icon, color: infoMuted, size: 18),
         const SizedBox(width: 10),
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: infoTextColor,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
