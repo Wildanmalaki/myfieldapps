@@ -3,9 +3,10 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:MyField/database/database_helper.dart';
-import 'package:flutter/material.dart';
+import 'package:MyField/models/booking_model.dart';
 import 'package:MyField/models/user_model.dart';
 import 'package:MyField/views/settings_page.dart';
+import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -21,13 +22,15 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   final ImagePicker _picker = ImagePicker();
   bool _isUploadingPhoto = false;
+  bool _isLoadingBookings = true;
   String _photoUrl = '';
+  List<Booking> _userBookings = [];
 
   String get displayFullName {
     final rawName = widget.currentUser.username.trim().isNotEmpty
         ? widget.currentUser.username.trim()
         : widget.currentUser.displayName.trim();
-    if (rawName.isEmpty) return "Member";
+    if (rawName.isEmpty) return 'Member';
 
     final source = rawName.contains('@') ? rawName.split('@').first : rawName;
     final cleaned = source.replaceAll(RegExp(r'[._-]+'), ' ').trim();
@@ -39,16 +42,81 @@ class _ProfilePageState extends State<ProfilePage> {
         )
         .toList();
 
-    if (parts.isEmpty) return "Member";
+    if (parts.isEmpty) return 'Member';
 
     return parts.join(' ');
+  }
+
+  int get _totalBookings => _userBookings.length;
+
+  int get _totalBookedHours => _userBookings.fold(
+        0,
+        (total, booking) => total + booking.durationHours,
+      );
+
+  String get _favoriteFieldName {
+    if (_userBookings.isEmpty) return 'Belum ada booking';
+
+    final counts = <String, int>{};
+    for (final booking in _userBookings) {
+      counts.update(booking.lapangan, (value) => value + 1, ifAbsent: () => 1);
+    }
+
+    final favorite = counts.entries.reduce(
+      (current, next) => next.value > current.value ? next : current,
+    );
+    return favorite.key;
+  }
+
+  int get _favoriteFieldCount {
+    if (_userBookings.isEmpty) return 0;
+
+    final counts = <String, int>{};
+    for (final booking in _userBookings) {
+      counts.update(booking.lapangan, (value) => value + 1, ifAbsent: () => 1);
+    }
+
+    return counts.values.reduce((current, next) => next > current ? next : current);
   }
 
   @override
   void initState() {
     super.initState();
     _photoUrl = widget.currentUser.photoUrl.trim();
-    _refreshProfileFromDatabase();
+    _loadProfileData();
+  }
+
+  Future<void> _loadProfileData() async {
+    setState(() {
+      _isLoadingBookings = true;
+    });
+
+    await _refreshProfileFromDatabase();
+
+    final userId = widget.currentUser.id;
+    if (userId == null) {
+      if (!mounted) return;
+      setState(() {
+        _userBookings = [];
+        _isLoadingBookings = false;
+      });
+      return;
+    }
+
+    try {
+      final bookings = await DatabaseHelper.instance.getBookingsByUser(userId);
+      if (!mounted) return;
+      setState(() {
+        _userBookings = bookings;
+        _isLoadingBookings = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _userBookings = [];
+        _isLoadingBookings = false;
+      });
+    }
   }
 
   @override
@@ -62,304 +130,261 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return Scaffold(
       backgroundColor: backgroundColor,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                /// hEADER
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "My Profile",
+      body: RefreshIndicator(
+        onRefresh: _loadProfileData,
+        child: SafeArea(
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'My Profile',
+                        style: TextStyle(
+                          color: titleColor,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SettingsPage(),
+                            ),
+                          );
+                        },
+                        icon: Icon(Icons.settings, color: titleColor),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 30),
+                  Center(
+                    child: Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 60,
+                          backgroundColor: const Color(0xFF0B3A66),
+                          child: _buildProfileAvatarContent(120),
+                        ),
+                        if (_isUploadingPhoto)
+                          const Positioned.fill(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: Color(0x66000000),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: SizedBox(
+                                  width: 28,
+                                  height: 28,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: GestureDetector(
+                            onTap: _isUploadingPhoto ? null : _changeProfilePhoto,
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                color: Colors.blue,
+                                shape: BoxShape.circle,
+                              ),
+                              padding: const EdgeInsets.all(8),
+                              child: const Icon(
+                                Icons.camera_alt,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Center(
+                    child: Text(
+                      displayFullName,
                       style: TextStyle(
                         color: titleColor,
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    IconButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const SettingsPage(),
-                          ),
-                        );
-                      },
-                      icon: Icon(Icons.settings, color: titleColor),
+                  ),
+                  const SizedBox(height: 6),
+                  Center(
+                    child: Text(
+                      widget.currentUser.role == 'pemilik lapangan'
+                          ? 'Pemilik Lapangan'
+                          : 'User Booking',
+                      style: TextStyle(color: subtitleColor),
                     ),
-                  ],
-                ),
-
-                SizedBox(height: 30),
-
-                // PROFILE IMAGE
-                Center(
-                  child: Stack(
-                    children: [
-                      CircleAvatar(
-                        radius: 60,
-                        backgroundColor: const Color(0xFF0B3A66),
-                        child: _buildProfileAvatarContent(120),
-                      ),
-                      if (_isUploadingPhoto)
-                        const Positioned.fill(
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: Color(0x66000000),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: SizedBox(
-                                width: 28,
-                                height: 28,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
+                  ),
+                  const SizedBox(height: 20),
+                  Center(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 30,
+                          vertical: 12,
                         ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: GestureDetector(
-                          onTap: _isUploadingPhoto ? null : _changeProfilePhoto,
-                          child: Container(
-                            decoration: const BoxDecoration(
-                              color: Colors.blue,
-                              shape: BoxShape.circle,
-                            ),
-                            padding: const EdgeInsets.all(8),
-                            child: const Icon(
-                              Icons.camera_alt,
-                              color: Colors.white,
-                              size: 18,
-                            ),
-                          ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      icon: const Icon(Icons.edit),
+                      label: const Text('Edit Profile'),
+                      onPressed: _showEditProfileDialog,
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'STATS',
+                        style: TextStyle(
+                          color: titleColor,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        _isLoadingBookings ? 'Memuat...' : '$_totalBookings data',
+                        style: TextStyle(color: Colors.blue.shade300),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 15),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatCard(
+                          cardColor: cardColor,
+                          titleColor: titleColor,
+                          subtitleColor: subtitleColor,
+                          icon: Icons.calendar_month_rounded,
+                          value: _isLoadingBookings ? '--' : '$_totalBookings',
+                          label: 'TOTAL BOOKING',
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildStatCard(
+                          cardColor: cardColor,
+                          titleColor: titleColor,
+                          subtitleColor: subtitleColor,
+                          icon: Icons.timelapse_rounded,
+                          value: _isLoadingBookings ? '--' : '$_totalBookedHours',
+                          label: 'TOTAL JAM MAIN',
                         ),
                       ),
                     ],
                   ),
-                ),
-
-                SizedBox(height: 20),
-
-                /// NAME
-                Center(
-                  child: Text(
-                    displayFullName,
+                  const SizedBox(height: 25),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF3A7BFF), Color(0xFF2A5BEA)],
+                      ),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.stadium_rounded,
+                          color: Colors.white,
+                          size: 40,
+                        ),
+                        const SizedBox(width: 15),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'LAPANGAN FAVORIT',
+                                style: TextStyle(color: Colors.white70),
+                              ),
+                              Text(
+                                _isLoadingBookings ? 'Memuat...' : _favoriteFieldName,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                _favoriteFieldCount == 0
+                                    ? 'Belum ada riwayat booking'
+                                    : '$_favoriteFieldCount kali dibooking',
+                                style: const TextStyle(color: Colors.white70),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  Text(
+                    'History Lapangan',
                     style: TextStyle(
                       color: titleColor,
-                      fontSize: 22,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-
-                SizedBox(height: 6),
-
-                Center(
-                  child: Text(
-                    widget.currentUser.role == "pemilik lapangan"
-                        ? "Pemilik Lapangan"
-                        : "User Booking",
-                    style: TextStyle(color: subtitleColor),
-                  ),
-                ),
-
-                SizedBox(height: 20),
-
-                /// EDIT BUTTON
-                Center(
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 30,
-                        vertical: 12,
+                  const SizedBox(height: 15),
+                  if (_isLoadingBookings)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 24),
+                        child: CircularProgressIndicator(),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                    )
+                  else if (_userBookings.isEmpty)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: cardColor,
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                    ),
-                    icon: Icon(Icons.edit),
-                    label: Text("Edit Profile"),
-                    onPressed: _showEditProfileDialog,
-                  ),
-                ),
-
-                SizedBox(height: 30),
-
-                /// SPORTS STATS
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "STATS",
-                      style: TextStyle(
-                        color: titleColor,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                      child: Text(
+                        'Belum ada riwayat booking yang tersimpan.',
+                        style: TextStyle(color: subtitleColor),
                       ),
-                    ),
-                    Text(
-                      "View All",
-                      style: TextStyle(color: Colors.blue.shade300),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 15),
-
-                Row(
-                  children: [
-                    /// MATCHES CARD
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: cardColor,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(Icons.sports_soccer, color: Colors.white),
-                            SizedBox(height: 10),
-                            Text(
-                              "100",
-                              style: TextStyle(
-                                color: titleColor,
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              "LAPANGAN YANG SUDAH DIBOOKING",
-                              style: TextStyle(
-                                color: subtitleColor,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(width: 12),
-
-                    /// WIN RATE CARD
-                    Expanded(
-                      child: Container(
-                        padding: EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: cardColor,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(Icons.emoji_events, color: Colors.white),
-                            SizedBox(height: 10),
-                            Text(
-                              "64%",
-                              style: TextStyle(
-                                color: titleColor,
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              "WIN RATE",
-                              style: TextStyle(color: subtitleColor),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                SizedBox(height: 25),
-
-                /// TOP SPORT
-                Container(
-                  padding: EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Color(0xFF3A7BFF), Color(0xFF2A5BEA)],
-                    ),
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.sports_soccer, color: Colors.white, size: 40),
-                      SizedBox(width: 15),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "STATIC",
-                            style: TextStyle(color: Colors.white70),
+                    )
+                  else
+                    ..._userBookings.take(5).map(
+                          (booking) => _buildBookingHistoryCard(
+                            booking: booking,
+                            cardColor: cardColor,
+                            titleColor: titleColor,
+                            subtitleColor: subtitleColor,
                           ),
-                          Text(
-                            "Minisoccer",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            "Striker â€¢ Avg Rating 8.4",
-                            style: TextStyle(color: Colors.white70),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                SizedBox(height: 30),
-
-                /// RECENT ACTIVITY
-                Text(
-                  "History Lapangan",
-                  style: TextStyle(
-                    color: titleColor,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                SizedBox(height: 15),
-
-                fungsiKolom(
-                  Icons.sports_basketball,
-                  "Dekings Arena",
-                  "Dibooking pada 12 Jan 2024",
-                  "2 jam lalu",
-                  Colors.orange,
-                  Image.network(
-                    "https://scontent-cgk1-2.xx.fbcdn.net/v/t39.30808-1/610964674_2679999182333365_6903091626739272275_n.jpg?stp=dst-jpg_s160x160_tt6&_nc_cat=108&ccb=1-7&_nc_sid=e99d92&_nc_eui2=AeG3ffvtVTA9GRRQUyHkLEFCrZlFi7NRhLOtmUWLs1GEswZh25jZ0vyFISOGLtD9vuGRuiod-AG3b1qxJdVtzXLt&_nc_ohc=R9vTCjBGoHEQ7kNvwEgdCT1&_nc_oc=AdmY2ASZ25NvGE0k9dkgYH5v6XeecXBtt9C0f2IZoYJjp5_qOE6CjE0LWH_fd_USYrU&_nc_zt=24&_nc_ht=scontent-cgk1-2.xx&_nc_gid=aS6GJIQkkseVX1pNVJaAaA&_nc_ss=8&oh=00_Afwv7cN5mnbKEphn6B3URGRGOe30e-_-JDxyn5tXIguKFQ&oe=69B3EA63",
-                  ),
-                ),
-                fungsiKolom(
-                  Icons.sports_basketball,
-                  "Lapangan Basket B",
-                  "Dibooking pada 12 Jan 2024",
-                  "2 jam lalu",
-                  Colors.orange,
-                  Image.network(
-                    "https://scontent-cgk1-2.xx.fbcdn.net/v/t39.30808-1/610964674_2679999182333365_6903091626739272275_n.jpg?stp=dst-jpg_s160x160_tt6&_nc_cat=108&ccb=1-7&_nc_sid=e99d92&_nc_eui2=AeG3ffvtVTA9GRRQUyHkLEFCrZlFi7NRhLOtmUWLs1GEswZh25jZ0vyFISOGLtD9vuGRuiod-AG3b1qxJdVtzXLt&_nc_ohc=R9vTCjBGoHEQ7kNvwEgdCT1&_nc_oc=AdmY2ASZ25NvGE0k9dkgYH5v6XeecXBtt9C0f2IZoYJjp5_qOE6CjE0LWH_fd_USYrU&_nc_zt=24&_nc_ht=scontent-cgk1-2.xx&_nc_gid=aS6GJIQkkseVX1pNVJaAaA&_nc_ss=8&oh=00_Afwv7cN5mnbKEphn6B3URGRGOe30e-_-JDxyn5tXIguKFQ&oe=69B3EA63",
-                  ),
-                ),
-              ],
+                        ),
+                ],
+              ),
             ),
           ),
         ),
@@ -367,49 +392,93 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget fungsiKolom(
-    IconData icon,
-    String title,
-    String subtitle,
-    String time,
-    Color color,
-    Image imageUrl,
-  ) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final localCardColor = isDark ? const Color(0xFF0E2A47) : Colors.white;
-    final localTitleColor = isDark ? Colors.white : const Color(0xFF102033);
-    final localSubtitleColor = isDark ? Colors.grey : const Color(0xFF66758A);
-
+  Widget _buildStatCard({
+    required Color cardColor,
+    required Color titleColor,
+    required Color subtitleColor,
+    required IconData icon,
+    required String value,
+    required String label,
+  }) {
     return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: localCardColor,
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: Colors.white),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: TextStyle(
+              color: titleColor,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: subtitleColor,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBookingHistoryCard({
+    required Booking booking,
+    required Color cardColor,
+    required Color titleColor,
+    required Color subtitleColor,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: color.withValues(alpha: 0.2),
-            child: Icon(icon, color: color),
+            backgroundColor: Colors.blue.withValues(alpha: 0.16),
+            child: const Icon(
+              Icons.calendar_month_rounded,
+              color: Colors.blue,
+            ),
           ),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  booking.lapangan,
                   style: TextStyle(
-                    color: localTitleColor,
+                    color: titleColor,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(subtitle, style: TextStyle(color: localSubtitleColor)),
+                Text(
+                  '${booking.tanggal} • ${booking.waktu}',
+                  style: TextStyle(color: subtitleColor),
+                ),
               ],
             ),
           ),
-          Text(time, style: TextStyle(color: localSubtitleColor)),
+          Text(
+            booking.harga,
+            style: TextStyle(
+              color: subtitleColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
@@ -502,7 +571,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _showEditProfileDialog() async {
     final userId = widget.currentUser.id;
     if (userId == null) {
-      _showMessage("User belum valid untuk diedit");
+      _showMessage('User belum valid untuk diedit');
       return;
     }
 
@@ -590,7 +659,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     final cleanedName = newName.trim();
     if (cleanedName.isEmpty) {
-      _showMessage("Nama profil tidak boleh kosong");
+      _showMessage('Nama profil tidak boleh kosong');
       return;
     }
 
@@ -610,17 +679,17 @@ class _ProfilePageState extends State<ProfilePage> {
         widget.currentUser.username = cleanedName;
       });
 
-      _showMessage("Profil berhasil diperbarui");
-      await _refreshProfileFromDatabase();
+      _showMessage('Profil berhasil diperbarui');
+      await _loadProfileData();
     } catch (e) {
       if (!mounted) return;
-      _showMessage("Update profil gagal: $e");
+      _showMessage('Update profil gagal: $e');
     }
   }
 
   Future<void> _changeProfilePhoto() async {
     if (widget.currentUser.id == null) {
-      _showMessage("User belum valid untuk upload foto");
+      _showMessage('User belum valid untuk upload foto');
       return;
     }
 
@@ -659,7 +728,7 @@ class _ProfilePageState extends State<ProfilePage> {
       );
     } catch (_) {
       if (!mounted) return;
-      _showMessage("Cropper tidak berhasil dibuka, foto asli akan dipakai.");
+      _showMessage('Cropper tidak berhasil dibuka, foto asli akan dipakai.');
     }
 
     if (!mounted) return;
@@ -692,11 +761,11 @@ class _ProfilePageState extends State<ProfilePage> {
         _photoUrl = encodedImage;
         widget.currentUser.photoUrl = encodedImage;
       });
-      await _refreshProfileFromDatabase();
-      _showMessage("Foto profil berhasil diperbarui");
+      await _loadProfileData();
+      _showMessage('Foto profil berhasil diperbarui');
     } catch (e) {
       if (!mounted) return;
-      _showMessage("Upload gagal: $e");
+      _showMessage('Upload gagal: $e');
     } finally {
       if (mounted) {
         setState(() {

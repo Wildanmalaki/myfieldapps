@@ -3,7 +3,9 @@ import 'package:MyField/models/user_model.dart';
 import 'package:MyField/views/pendaftaran_page.dart';
 import 'package:MyField/views/settings_page.dart';
 import 'package:MyField/widget/bottomnavbar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,6 +15,8 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPage extends State<LoginPage> {
+  static bool _googleInitialized = false;
+
   final Color bgColor = const Color(0xFFF5F7FB);
   final Color accentColor = const Color(0xFF3A7BFF);
   final Color darkAccent = const Color(0xFF0F172A);
@@ -24,6 +28,7 @@ class _LoginPage extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool obscurePassword = true;
+  bool _isGoogleLoading = false;
 
   @override
   void initState() {
@@ -70,6 +75,107 @@ class _LoginPage extends State<LoginPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Email atau Password salah")),
       );
+    }
+  }
+
+  Future<void> loginWithGoogle() async {
+    if (_isGoogleLoading) return;
+
+    setState(() {
+      _isGoogleLoading = true;
+    });
+
+    try {
+      final googleSignIn = GoogleSignIn.instance;
+      if (!_googleInitialized) {
+        await googleSignIn.initialize();
+        _googleInitialized = true;
+      }
+
+      final googleUser = await googleSignIn.authenticate();
+      final googleAuth = googleUser.authentication;
+      final idToken = googleAuth.idToken;
+
+      if (idToken == null || idToken.isEmpty) {
+        throw FirebaseAuthException(
+          code: 'google-id-token-missing',
+          message: 'Token Google tidak tersedia.',
+        );
+      }
+
+      final credential = GoogleAuthProvider.credential(idToken: idToken);
+      final authResult = await FirebaseAuth.instance.signInWithCredential(
+        credential,
+      );
+      final firebaseUser = authResult.user;
+
+      if (firebaseUser == null || firebaseUser.email == null) {
+        throw FirebaseAuthException(
+          code: 'google-user-null',
+          message: 'Data akun Google tidak tersedia.',
+        );
+      }
+
+      final displayName = firebaseUser.displayName?.trim().isNotEmpty == true
+          ? firebaseUser.displayName!.trim()
+          : firebaseUser.email!.split('@').first;
+
+      final user = await DatabaseHelper.instance.ensureGoogleUser(
+        email: firebaseUser.email!,
+        username: displayName,
+        photoUrl: firebaseUser.photoURL ?? '',
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Login Google berhasil")),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => BottomNavbar(currentUser: user),
+        ),
+      );
+    } on GoogleSignInException catch (e) {
+      if (!mounted) return;
+      final isCancelled = e.code == GoogleSignInExceptionCode.canceled ||
+          e.code == GoogleSignInExceptionCode.interrupted;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isCancelled
+                ? "Login Google dibatalkan"
+                : "Login Google gagal: ${e.description}",
+          ),
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      final isCancelled = e.code == 'web-context-cancelled' ||
+          e.code == 'popup-closed-by-user' ||
+          e.code == 'canceled';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isCancelled
+                ? "Login Google dibatalkan"
+                : "Login Google gagal: ${e.message ?? e.code}",
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Login Google gagal: $e")),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isGoogleLoading = false;
+        });
+      }
     }
   }
 
@@ -211,7 +317,8 @@ class _LoginPage extends State<LoginPage> {
                       Expanded(
                         child: _socialButton(
                           icon: _buildGoogleIcon(),
-                          label: "Google",
+                          label: _isGoogleLoading ? "Loading..." : "Google",
+                          onPressed: _isGoogleLoading ? null : loginWithGoogle,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -219,6 +326,13 @@ class _LoginPage extends State<LoginPage> {
                         child: _socialButton(
                           icon: const Icon(Icons.apple_rounded, size: 20),
                           label: "Apple",
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Login Apple belum tersedia"),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ],
@@ -282,9 +396,10 @@ class _LoginPage extends State<LoginPage> {
   Widget _socialButton({
     required Widget icon,
     required String label,
+    required VoidCallback? onPressed,
   }) {
     return OutlinedButton.icon(
-      onPressed: () {},
+      onPressed: onPressed,
       style: OutlinedButton.styleFrom(
         foregroundColor: darkAccent,
         backgroundColor: Colors.white,

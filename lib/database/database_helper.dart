@@ -89,6 +89,42 @@ class DatabaseHelper {
     );
   }
 
+  Future<UserModel> ensureGoogleUser({
+    required String email,
+    required String username,
+    required String photoUrl,
+  }) async {
+    final existingUser = await getUserByEmail(email);
+    if (existingUser != null) {
+      await updateUserProfile(
+        userId: existingUser.id ?? 0,
+        username: username.isEmpty ? existingUser.username : username,
+        photoUrl: photoUrl.isEmpty ? existingUser.photoUrl : photoUrl,
+      );
+
+      return UserModel(
+        id: existingUser.id,
+        username: username.isEmpty ? existingUser.username : username,
+        email: existingUser.email,
+        password: existingUser.password,
+        role: existingUser.role,
+        photoUrl: photoUrl.isEmpty ? existingUser.photoUrl : photoUrl,
+      );
+    }
+
+    final user = UserModel(
+      id: DateTime.now().millisecondsSinceEpoch,
+      username: username,
+      email: email,
+      password: '',
+      role: 'user booking',
+      photoUrl: photoUrl,
+    );
+
+    await insertUser(user);
+    return user;
+  }
+
   Future<int> insertBooking(Booking booking) {
     return _firebaseService.createDocument(
       collectionPath: _bookingsCollection,

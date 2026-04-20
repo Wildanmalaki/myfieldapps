@@ -436,6 +436,7 @@ class _HomePageState extends State<HomePage> {
                       imageurl: field.imageUrl,
                       location: field.location,
                       rating: field.rating,
+                      currentUser: widget.currentUser,
                     );
                   },
                 ),
@@ -861,6 +862,7 @@ class FeatureCard extends StatelessWidget {
   final String imageurl;
   final String location;
   final String rating;
+  final UserModel currentUser;
 
   const FeatureCard({
     super.key,
@@ -872,7 +874,23 @@ class FeatureCard extends StatelessWidget {
     required this.imageurl,
     required this.location,
     required this.rating,
+    required this.currentUser,
   });
+
+  String get oneHourPriceLabel => 'Rp ${_formatCurrency(oneHourPrice)} / 1 jam';
+
+  String _formatCurrency(int value) {
+    final digits = value.toString();
+    final buffer = StringBuffer();
+    for (var i = 0; i < digits.length; i++) {
+      final reversedIndex = digits.length - i;
+      buffer.write(digits[i]);
+      if (reversedIndex > 1 && reversedIndex % 3 == 1) {
+        buffer.write('.');
+      }
+    }
+    return buffer.toString();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -880,49 +898,71 @@ class FeatureCard extends StatelessWidget {
     final textColor = isDark ? Colors.white : const Color(0xFF102033);
     final mutedColor = isDark ? Colors.white70 : const Color(0xFF66758A);
 
-    return Container(
-      width: 300,
-      margin: const EdgeInsets.only(right: 15),
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(15),
-              child: _NetworkCardImage(imageUrl: imageurl),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                DetailBooking(
+              namaLapangan: title,
+              lokasi: location,
+              rating: double.parse(rating),
+              gambar: imageurl,
+              harga: price,
+              harga1Jam: oneHourPrice,
+              harga2Jam: twoHourPrice,
+              currentUser: currentUser,
             ),
+            transitionDuration: Duration.zero,
+            reverseTransitionDuration: Duration.zero,
           ),
-          const SizedBox(height: 10),
-          Text(
-            title,
-            style: TextStyle(
-              color: textColor,
-              fontWeight: FontWeight.bold,
+        );
+      },
+      child: Container(
+        width: 300,
+        margin: const EdgeInsets.only(right: 15),
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(15),
+                child: _NetworkCardImage(imageUrl: imageurl),
+              ),
             ),
-          ),
-          const SizedBox(height: 5),
-          Text(price, style: TextStyle(color: textColor)),
-          const SizedBox(height: 5),
-          Row(
-            children: [
-              Text(location, style: TextStyle(color: mutedColor)),
-              const Spacer(),
-              Icon(Icons.location_on_outlined, color: mutedColor),
-            ],
-          ),
-          const SizedBox(height: 5),
-          Row(
-            children: [
-              Text(rating, style: TextStyle(color: textColor)),
-              const Icon(Icons.star, color: Colors.amber, size: 20),
-            ],
-          ),
-        ],
+            const SizedBox(height: 10),
+            Text(
+              title,
+              style: TextStyle(
+                color: textColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 5),
+            Text(oneHourPriceLabel, style: TextStyle(color: textColor)),
+            const SizedBox(height: 5),
+            Row(
+              children: [
+                Text(location, style: TextStyle(color: mutedColor)),
+                const Spacer(),
+                Icon(Icons.location_on_outlined, color: mutedColor),
+              ],
+            ),
+            const SizedBox(height: 5),
+            Row(
+              children: [
+                Text(rating, style: TextStyle(color: textColor)),
+                const Icon(Icons.star, color: Colors.amber, size: 20),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -994,6 +1034,21 @@ class NearbyCard extends StatelessWidget {
     required this.tags,
     required this.currentUser,
   });
+
+  String get oneHourPriceLabel => 'Rp ${_formatCurrency(oneHourPrice)} / 1 jam';
+
+  String _formatCurrency(int value) {
+    final digits = value.toString();
+    final buffer = StringBuffer();
+    for (var i = 0; i < digits.length; i++) {
+      final reversedIndex = digits.length - i;
+      buffer.write(digits[i]);
+      if (reversedIndex > 1 && reversedIndex % 3 == 1) {
+        buffer.write('.');
+      }
+    }
+    return buffer.toString();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1079,6 +1134,14 @@ class NearbyCard extends StatelessWidget {
                 SizedBox(height: 5),
                 Row(
                   children: [
+                    Text(
+                      oneHourPriceLabel,
+                      style: TextStyle(
+                        color: titleColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
                     Icon(Icons.location_on, size: 14, color: Colors.grey),
                     SizedBox(width: 4),
                     Text(distance, style: TextStyle(color: mutedColor)),

@@ -40,7 +40,9 @@ dependencies:
   image_cropper: ^11.0.0
   cloud_firestore: ^6.1.0
   firebase_core: ^4.2.1
+  firebase_auth: ^6.1.0
   firebase_storage: ^13.0.2
+  google_sign_in: ^7.2.0
   flutter_local_notifications: ^17.2.3
 
 dev_dependencies:
