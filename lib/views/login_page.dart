@@ -212,7 +212,7 @@ class _LoginPage extends State<LoginPage> {
                   ),
                   const SizedBox(height: 18),
                   Text(
-                    "Welcome back",
+                    "Selamat Datang!",
                     style: TextStyle(
                       fontSize: 30,
                       fontWeight: FontWeight.w800,
@@ -238,7 +238,7 @@ class _LoginPage extends State<LoginPage> {
                     style: TextStyle(color: titleColor),
                     keyboardType: TextInputType.emailAddress,
                     decoration: _inputDecoration(
-                      hint: "name@gmail.com",
+                      hint: "Masukan Email",
                       prefixIcon: Icons.mail_outline_rounded,
                     ),
                   ),
@@ -323,30 +323,13 @@ class _LoginPage extends State<LoginPage> {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _socialButton(
-                          icon: _buildGoogleIcon(),
-                          label: _isGoogleLoading ? "Loading..." : "Google",
-                          onPressed: _isGoogleLoading ? null : loginWithGoogle,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _socialButton(
-                          icon: const Icon(Icons.apple_rounded, size: 20),
-                          label: "Apple",
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Login Apple belum tersedia"),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
+                  SizedBox(
+                    width: double.infinity,
+                    child: _socialButton(
+                      icon: _buildGoogleIcon(),
+                      label: _isGoogleLoading ? "Loading..." : "Google",
+                      onPressed: _isGoogleLoading ? null : loginWithGoogle,
+                    ),
                   ),
                   const SizedBox(height: 28),
                   TextButton(
