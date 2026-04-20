@@ -4,6 +4,7 @@ import 'package:MyField/models/booking_model.dart';
 import 'package:MyField/models/user_model.dart';
 import 'package:MyField/views/payment_page.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DetailBooking extends StatefulWidget {
   final String namaLapangan;
@@ -13,6 +14,9 @@ class DetailBooking extends StatefulWidget {
   final String harga;
   final int? harga1Jam;
   final int? harga2Jam;
+  final String? fullAddress;
+  final double? latitude;
+  final double? longitude;
   final UserModel currentUser;
 
   const DetailBooking({
@@ -24,6 +28,9 @@ class DetailBooking extends StatefulWidget {
     required this.harga,
     this.harga1Jam,
     this.harga2Jam,
+    this.fullAddress,
+    this.latitude,
+    this.longitude,
     required this.currentUser,
   });
 
@@ -255,8 +262,47 @@ class _DetailBookingState extends State<DetailBooking> {
     return '1 jam Rp ${_formatCurrency(_oneHourRate)} | 2 jam Rp ${_formatCurrency(_twoHourRate)}';
   }
 
+  String get _resolvedAddress {
+    final address = widget.fullAddress?.trim();
+    if (address != null && address.isNotEmpty) {
+      return address;
+    }
+    return widget.lokasi;
+  }
+
+  String get _coordinateLabel {
+    if (widget.latitude == null || widget.longitude == null) {
+      return 'Koordinat tersedia saat dibuka di Google Maps';
+    }
+
+    return '${widget.latitude!.toStringAsFixed(6)}, ${widget.longitude!.toStringAsFixed(6)}';
+  }
+
   String get _durationLabel =>
       _selectedDurationHours == 1 ? '1 jam' : '$_selectedDurationHours jam';
+
+  Future<void> _openInMaps() async {
+    final query = widget.latitude != null && widget.longitude != null
+        ? '${widget.latitude},${widget.longitude}'
+        : '${widget.namaLapangan}, $_resolvedAddress';
+    final uri = Uri.https(
+      'www.google.com',
+      '/maps/search/',
+      {
+        'api': '1',
+        'query': query,
+      },
+    );
+
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Google Maps belum bisa dibuka di perangkat ini.'),
+        ),
+      );
+    }
+  }
 
   String _formatHour(int hour) {
     return '${hour.toString().padLeft(2, '0')}:00';
@@ -389,6 +435,8 @@ class _DetailBookingState extends State<DetailBooking> {
                     titleColor,
                     isDark,
                   ),
+                  const SizedBox(height: 24),
+                  _buildLocationPanel(localCardColor, localTextMuted, titleColor),
                   const SizedBox(height: 24),
                   _buildFacilities(localCardColor, localTextMuted, titleColor),
                   const SizedBox(height: 24),
@@ -572,7 +620,7 @@ class _DetailBookingState extends State<DetailBooking> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => ReviewListPage(
-                      fieldName: 'Talenta Court',
+                      fieldName: widget.namaLapangan,
                     ),
                   ),
                 );
@@ -582,6 +630,96 @@ class _DetailBookingState extends State<DetailBooking> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildLocationPanel(
+    Color localCardColor,
+    Color localTextMuted,
+    Color titleColor,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: localCardColor,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.explore_rounded, color: primaryBlue, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Lokasi Lapangan',
+                style: TextStyle(
+                  color: titleColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.place_outlined, color: localTextMuted, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _resolvedAddress,
+                  style: TextStyle(
+                    color: titleColor,
+                    fontSize: 13,
+                    height: 1.45,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.my_location_rounded, color: localTextMuted, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _coordinateLabel,
+                  style: TextStyle(
+                    color: localTextMuted,
+                    fontSize: 12.5,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _openInMaps,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryBlue,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              icon: const Icon(Icons.map_outlined),
+              label: const Text(
+                'Buka di Google Maps',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

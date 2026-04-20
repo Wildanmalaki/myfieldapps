@@ -12,7 +12,36 @@
           "package_name": "com.wildan.myfield"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "166810882548-7q7hhp253dhbcn28ce5hlpf653gf4c8d.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wildan.myfield",
+            "certificate_hash": "d4f41e1a0d6f689739a7ff292596152d27b59428"
+          }
+        },
+        {
+          "client_id": "166810882548-jt6chdqb95gq18sjmvd8dlttpl8i987t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wildan.myfield",
+            "certificate_hash": "c155e508cb4cf7c5ffcc2e7d3a46a82927b512c3"
+          }
+        },
+        {
+          "client_id": "166810882548-u9l51giehmmsq3o3qkj7k37gqc2p4opa.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wildan.myfield",
+            "certificate_hash": "7ded38b69a5dba8f6eb368426aaa6c3324ca62a0"
+          }
+        },
+        {
+          "client_id": "166810882548-hq6759ospuhjmcfknrv9cnkegjit8quv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBUG7x-zh-frmHPM5F80bIkV8vj3j0DMRU"
@@ -20,7 +49,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "166810882548-hq6759ospuhjmcfknrv9cnkegjit8quv.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "166810882548-0gmkqh4ei2hl7rdntjqhcllkqejsj037.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.wildan.myfield"
+              }
+            }
+          ]
         }
       }
     }

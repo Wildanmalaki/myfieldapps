@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:MyField/models/user_model.dart';
-import 'package:MyField/views/home_page.dart';
-import 'package:MyField/views/bookings_page.dart';
-import 'package:MyField/views/community_page.dart';
-import 'package:MyField/views/profile.dart';
+import '../models/user_model.dart';
+import '../views/bookings_page.dart';
+import '../views/community_page.dart';
+import '../views/home_page.dart';
+import '../views/account_page.dart';
 
 class BottomNavbar extends StatefulWidget {
   final UserModel currentUser;
@@ -27,7 +27,7 @@ class _BottomNavbarState extends State<BottomNavbar> {
       HomePage(currentUser: widget.currentUser),
       BookingsPage(currentUser: widget.currentUser),
       CommunityPage(currentUser: widget.currentUser),
-      ProfilePage(currentUser: widget.currentUser),
+      AccountPage(currentUser: widget.currentUser),
     ];
 
     return Scaffold(

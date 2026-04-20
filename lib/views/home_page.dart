@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:MyField/models/field_location_data.dart';
 import 'package:MyField/views/detail_booking.dart';
 import 'package:MyField/models/user_model.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
@@ -11,17 +13,41 @@ class _FieldPriceData {
   final int oneHourPrice;
   final int twoHourPrice;
   final String imageUrl;
-  final String location;
   final String rating;
+  final FieldLocationData locationData;
 
-  const _FieldPriceData({
+  _FieldPriceData({
     required this.title,
     required this.priceLabel,
     required this.oneHourPrice,
     required this.twoHourPrice,
     required this.imageUrl,
-    required this.location,
     required this.rating,
+    required this.locationData,
+  });
+}
+
+class _NearbyFieldData {
+  final String title;
+  final String price;
+  final int oneHourPrice;
+  final int twoHourPrice;
+  final String fallbackDistance;
+  final String rating;
+  final String imageUrl;
+  final FieldLocationData locationData;
+  final List<String> tags;
+
+  const _NearbyFieldData({
+    required this.title,
+    required this.price,
+    required this.oneHourPrice,
+    required this.twoHourPrice,
+    required this.fallbackDistance,
+    required this.rating,
+    required this.imageUrl,
+    required this.locationData,
+    required this.tags,
   });
 }
 
@@ -41,7 +67,10 @@ class _HomePageState extends State<HomePage> {
   int _currentPage = 0;
   Timer? timer;
   bool _hasShownPromoDialog = false;
-  final List<_FieldPriceData> _featuredFieldCards = const [
+  Position? _userPosition;
+  bool _isResolvingLocation = false;
+  String? _locationErrorMessage;
+  final List<_FieldPriceData> _featuredFieldCards = [
     _FieldPriceData(
       title: 'Dekings Arena',
       priceLabel: 'Rp 700.000 / 1 jam | Rp 1.500.000 / 2 jam',
@@ -49,8 +78,8 @@ class _HomePageState extends State<HomePage> {
       twoHourPrice: 1500000,
       imageUrl:
           'https://admin.saraga.id/storage/images/14572131-10154585801270699-3099495380002420769-n_1631619103.jpg',
-      location: 'Lubang Buaya',
       rating: '4.5',
+      locationData: FieldLocationRegistry.byName['Dekings Arena']!,
     ),
     _FieldPriceData(
       title: 'Pancoran Soccer Field',
@@ -59,8 +88,8 @@ class _HomePageState extends State<HomePage> {
       twoHourPrice: 3850000,
       imageUrl:
           'https://gelora-public-storage.s3-ap-southeast-1.amazonaws.com/upload/public-20210216090138.jpg',
-      location: 'Jakarta Selatan',
       rating: '4.5',
+      locationData: FieldLocationRegistry.byName['Pancoran Soccer Field']!,
     ),
     _FieldPriceData(
       title: 'Lapangan Sepakbola C',
@@ -69,8 +98,8 @@ class _HomePageState extends State<HomePage> {
       twoHourPrice: 4500000,
       imageUrl:
           'https://cdn0-production-images-kly.akamaized.net/zXgbXIZi79R94m7KA894EfHB1jQ=/1231x710/smart/filters:quality(75):strip_icc()/kly-media-production/medias/1707784/original/096144000_1505210611-Lapangan-C-Senayan2.jpg',
-      location: 'Senayan',
       rating: '4.5',
+      locationData: FieldLocationRegistry.byName['Lapangan Sepakbola C']!,
     ),
     _FieldPriceData(
       title: 'F7 MINISOCCER ARENA',
@@ -79,8 +108,8 @@ class _HomePageState extends State<HomePage> {
       twoHourPrice: 1450000,
       imageUrl:
           'https://gelora-public-storage.s3-ap-southeast-1.amazonaws.com/upload/public-20230214134056.jpg',
-      location: 'Cilandak',
       rating: '4.5',
+      locationData: FieldLocationRegistry.byName['F7 MINISOCCER ARENA']!,
     ),
     _FieldPriceData(
       title: 'Social Padel House Menteng',
@@ -89,8 +118,9 @@ class _HomePageState extends State<HomePage> {
       twoHourPrice: 400000,
       imageUrl:
           'https://images.unsplash.com/photo-1646649853703-7645147474ba?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cGFkZWx8ZW58MHx8MHx8fDA%3D',
-      location: 'Jakarta Timur',
       rating: '4.5',
+      locationData:
+          FieldLocationRegistry.byName['Social Padel House Menteng']!,
     ),
     _FieldPriceData(
       title: 'BBC Bali',
@@ -99,8 +129,8 @@ class _HomePageState extends State<HomePage> {
       twoHourPrice: 2500000,
       imageUrl:
           'https://asset.ayo.co.id/image/venue/171835445216622.image_cropper_A9B84175-A6F2-42D6-A12D-C80E79027E1A-674-0000002CA2B49FDB_large.jpg',
-      location: 'Kota Denpasar, Bali',
       rating: '4.5',
+      locationData: FieldLocationRegistry.byName['BBC Bali']!,
     ),
   ];
   final List<String> categories = [
@@ -121,6 +151,69 @@ class _HomePageState extends State<HomePage> {
       'title': 'Weekend Flash Deal',
       'subtitle': 'Harga lebih hemat untuk booking rame-rame di akhir pekan.',
     },
+  ];
+  final List<_NearbyFieldData> _nearbyFields = [
+    _NearbyFieldData(
+      title: 'Dekings Arena',
+      price: 'Rp 750.000 / 1 jam â€¢ Rp 1.500.000 / 2 jam',
+      oneHourPrice: 750000,
+      twoHourPrice: 1500000,
+      fallbackDistance: '1.9 Km',
+      rating: '4.8',
+      imageUrl:
+          'https://admin.saraga.id/storage/images/14572131-10154585801270699-3099495380002420769-n_1631619103.jpg',
+      locationData: FieldLocationRegistry.byName['Dekings Arena']!,
+      tags: ['Football', 'Shower', 'Parking gratis', 'Diskon'],
+    ),
+    _NearbyFieldData(
+      title: 'Alfa Rooftop Mini Soccer Tamini Square',
+      price: 'Rp 1.250.000 / 1 jam â€¢ Rp 2.500.000 / 2 jam',
+      oneHourPrice: 1250000,
+      twoHourPrice: 2500000,
+      fallbackDistance: '650 m',
+      rating: '4.6',
+      imageUrl:
+          'https://asset.ayo.co.id/image/venue/170859795250713.image_cropper_1708597870231.jpg',
+      locationData:
+          FieldLocationRegistry.byName['Alfa Rooftop Mini Soccer Tamini Square']!,
+      tags: ['Minisoccer', 'Parking', 'Free WiFi', 'Promo!'],
+    ),
+    _NearbyFieldData(
+      title: 'Halim Futsal Badminton',
+      price: 'Rp 100.000 / 1 jam â€¢ Rp 200.000 / 2 jam',
+      oneHourPrice: 100000,
+      twoHourPrice: 200000,
+      fallbackDistance: '2.6 Km',
+      rating: '4.2',
+      imageUrl:
+          'https://asset.ayo.co.id/image/venue/174288649079497.image_cropper_1742886399702.jpg_large.jpeg',
+      locationData: FieldLocationRegistry.byName['Halim Futsal Badminton']!,
+      tags: ['Futsal', 'Badminton', 'free minuman', 'Diskon!'],
+    ),
+    _NearbyFieldData(
+      title: 'Talenta Court',
+      price: 'Rp 200.000 / 1 jam â€¢ Rp 400.000 / 2 jam',
+      oneHourPrice: 200000,
+      twoHourPrice: 400000,
+      fallbackDistance: '8.9 Km',
+      rating: '4.2',
+      imageUrl:
+          'https://asset.ayo.co.id/image/venue/177095980826513.image_cropper_1770959664162.jpg_large.jpeg',
+      locationData: FieldLocationRegistry.byName['Talenta Court']!,
+      tags: ['Basketball', 'Public'],
+    ),
+    _NearbyFieldData(
+      title: 'Arena Dirgantara Mini Soccer',
+      price: 'Rp 300.000 / 1 jam â€¢ Rp 600.000 / 2 jam',
+      oneHourPrice: 300000,
+      twoHourPrice: 600000,
+      fallbackDistance: '18 Km',
+      rating: '3.9',
+      imageUrl:
+          'https://asset.ayo.co.id/image/venue/175281821762319.image_cropper_1752818166728.jpg_large.jpeg',
+      locationData: FieldLocationRegistry.byName['Arena Dirgantara Mini Soccer']!,
+      tags: ['Basketball', 'Public'],
+    ),
   ];
 
   String get displayFirstName {
@@ -165,6 +258,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    _resolveUserLocation();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _hasShownPromoDialog) return;
@@ -190,6 +284,115 @@ class _HomePageState extends State<HomePage> {
     timer?.cancel();
     _pageController.dispose();
     super.dispose();
+  }
+
+  Future<void> _resolveUserLocation() async {
+    if (_isResolvingLocation) return;
+
+    setState(() {
+      _isResolvingLocation = true;
+      _locationErrorMessage = null;
+    });
+
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        if (!mounted) return;
+        setState(() {
+          _locationErrorMessage = 'Aktifkan lokasi untuk melihat jarak asli.';
+          _isResolvingLocation = false;
+        });
+        return;
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        if (!mounted) return;
+        setState(() {
+          _locationErrorMessage =
+              'Izin lokasi ditolak. Menampilkan jarak perkiraan.';
+          _isResolvingLocation = false;
+        });
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _userPosition = position;
+        _isResolvingLocation = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _locationErrorMessage =
+            'Lokasi belum berhasil dibaca. Menampilkan jarak perkiraan.';
+        _isResolvingLocation = false;
+      });
+    }
+  }
+
+  String _distanceLabelFor(
+    FieldLocationData locationData, {
+    required String fallbackDistance,
+  }) {
+    final userPosition = _userPosition;
+    final latitude = locationData.latitude;
+    final longitude = locationData.longitude;
+
+    if (userPosition == null || latitude == null || longitude == null) {
+      return fallbackDistance;
+    }
+
+    final distanceInMeters = Geolocator.distanceBetween(
+      userPosition.latitude,
+      userPosition.longitude,
+      latitude,
+      longitude,
+    );
+
+    if (distanceInMeters < 1000) {
+      return '${distanceInMeters.round()} m';
+    }
+
+    final distanceInKm = distanceInMeters / 1000;
+    return '${distanceInKm.toStringAsFixed(distanceInKm >= 10 ? 0 : 1)} Km';
+  }
+
+  double _distanceMetersFor(FieldLocationData locationData) {
+    final userPosition = _userPosition;
+    final latitude = locationData.latitude;
+    final longitude = locationData.longitude;
+
+    if (userPosition == null || latitude == null || longitude == null) {
+      return double.infinity;
+    }
+
+    return Geolocator.distanceBetween(
+      userPosition.latitude,
+      userPosition.longitude,
+      latitude,
+      longitude,
+    );
+  }
+
+  List<_NearbyFieldData> get _sortedNearbyFields {
+    final fields = List<_NearbyFieldData>.from(_nearbyFields);
+    fields.sort(
+      (first, second) => _distanceMetersFor(first.locationData)
+          .compareTo(_distanceMetersFor(second.locationData)),
+    );
+    return fields;
   }
 
   @override
@@ -434,8 +637,12 @@ class _HomePageState extends State<HomePage> {
                       oneHourPrice: field.oneHourPrice,
                       twoHourPrice: field.twoHourPrice,
                       imageurl: field.imageUrl,
-                      location: field.location,
                       rating: field.rating,
+                      locationData: field.locationData,
+                      distanceLabel: _distanceLabelFor(
+                        field.locationData,
+                        fallbackDistance: field.locationData.shortLocation,
+                      ),
                       currentUser: widget.currentUser,
                     );
                   },
@@ -461,16 +668,76 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
               ),
+              if (_isResolvingLocation || _locationErrorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 0, 10, 12),
+                  child: Row(
+                    children: [
+                      if (_isResolvingLocation)
+                        SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: accentColor,
+                          ),
+                        )
+                      else
+                        Icon(
+                          Icons.info_outline,
+                          size: 16,
+                          color: mutedColor,
+                        ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _isResolvingLocation
+                              ? 'Mencari lokasi kamu untuk menghitung jarak lapangan...'
+                              : _locationErrorMessage!,
+                          style: TextStyle(
+                            color: mutedColor,
+                            fontSize: 12.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
               SizedBox(height: 15),
+
+              if (_sortedNearbyFields.isNotEmpty)
+                ..._sortedNearbyFields.map(
+                  (field) => NearbyCard(
+                    title: field.title,
+                    price: field.price,
+                    oneHourPrice: field.oneHourPrice,
+                    twoHourPrice: field.twoHourPrice,
+                    distance: _distanceLabelFor(
+                      field.locationData,
+                      fallbackDistance: field.fallbackDistance,
+                    ),
+                    rating: field.rating,
+                    imageUrl: field.imageUrl,
+                    locationData: field.locationData,
+                    tags: field.tags,
+                    currentUser: widget.currentUser,
+                  ),
+                ),
+
+              if (_sortedNearbyFields.isEmpty) ...[
 
               NearbyCard(
                 title: "Dekings Arena",
                 price: "Rp 750.000 / 1 jam • Rp 1.500.000 / 2 jam",
-                oneHourPrice: 750000,
-                twoHourPrice: 1500000,
-                distance: "1.9 Km",
-                rating: "4.8",
+              oneHourPrice: 750000,
+              twoHourPrice: 1500000,
+              distance: _distanceLabelFor(
+                FieldLocationRegistry.byName['Dekings Arena']!,
+                fallbackDistance: "1.9 Km",
+              ),
+              locationData: FieldLocationRegistry.byName['Dekings Arena']!,
+              rating: "4.8",
                 imageUrl:
                     "https://admin.saraga.id/storage/images/14572131-10154585801270699-3099495380002420769-n_1631619103.jpg",
                 tags: ["Football", "Shower", "Parking gratis", "Diskon"],
@@ -480,10 +747,16 @@ class _HomePageState extends State<HomePage> {
               NearbyCard(
                 title: "Alfa Rooftop Mini Soccer Tamini Square",
                 price: "Rp 1.250.000 / 1 jam • Rp 2.500.000 / 2 jam",
-                oneHourPrice: 1250000,
-                twoHourPrice: 2500000,
-                distance: "650 m",
-                rating: "4.6",
+              oneHourPrice: 1250000,
+              twoHourPrice: 2500000,
+              distance: _distanceLabelFor(
+                FieldLocationRegistry
+                    .byName['Alfa Rooftop Mini Soccer Tamini Square']!,
+                fallbackDistance: "650 m",
+              ),
+              locationData: FieldLocationRegistry
+                  .byName['Alfa Rooftop Mini Soccer Tamini Square']!,
+              rating: "4.6",
                 imageUrl:
                     "https://asset.ayo.co.id/image/venue/170859795250713.image_cropper_1708597870231.jpg",
                 tags: ["Minisoccer", "Parking", "Free WiFi", "Promo!"],
@@ -493,10 +766,15 @@ class _HomePageState extends State<HomePage> {
               NearbyCard(
                 title: "Halim Futsal Badminton",
                 price: "Rp 100.000 / 1 jam • Rp 200.000 / 2 jam",
-                oneHourPrice: 100000,
-                twoHourPrice: 200000,
-                distance: "2.6 Km",
-                rating: "4.2",
+              oneHourPrice: 100000,
+              twoHourPrice: 200000,
+              distance: _distanceLabelFor(
+                FieldLocationRegistry.byName['Halim Futsal Badminton']!,
+                fallbackDistance: "2.6 Km",
+              ),
+              locationData:
+                  FieldLocationRegistry.byName['Halim Futsal Badminton']!,
+              rating: "4.2",
                 imageUrl:
                     "https://asset.ayo.co.id/image/venue/174288649079497.image_cropper_1742886399702.jpg_large.jpeg",
                 tags: ["Futsal", "Badminton", "free minuman", "Diskon!"],
@@ -505,10 +783,14 @@ class _HomePageState extends State<HomePage> {
               NearbyCard(
                 title: "Talenta Court",
                 price: "Rp 200.000 / 1 jam • Rp 400.000 / 2 jam",
-                oneHourPrice: 200000,
-                twoHourPrice: 400000,
-                distance: "8.9 Km",
-                rating: "4.2",
+              oneHourPrice: 200000,
+              twoHourPrice: 400000,
+              distance: _distanceLabelFor(
+                FieldLocationRegistry.byName['Talenta Court']!,
+                fallbackDistance: "8.9 Km",
+              ),
+              locationData: FieldLocationRegistry.byName['Talenta Court']!,
+              rating: "4.2",
                 imageUrl:
                     "https://asset.ayo.co.id/image/venue/177095980826513.image_cropper_1770959664162.jpg_large.jpeg",
                 tags: ["Basketball", "Public"],
@@ -517,15 +799,21 @@ class _HomePageState extends State<HomePage> {
               NearbyCard(
                 title: "Arena Dirgantara Mini Soccer",
                 price: "Rp 300.000 / 1 jam • Rp 600.000 / 2 jam",
-                oneHourPrice: 300000,
-                twoHourPrice: 600000,
-                distance: "18 Km",
-                rating: "3.9",
+              oneHourPrice: 300000,
+              twoHourPrice: 600000,
+              distance: _distanceLabelFor(
+                FieldLocationRegistry.byName['Arena Dirgantara Mini Soccer']!,
+                fallbackDistance: "18 Km",
+              ),
+              locationData: FieldLocationRegistry
+                  .byName['Arena Dirgantara Mini Soccer']!,
+              rating: "3.9",
                 imageUrl:
                     "https://asset.ayo.co.id/image/venue/175281821762319.image_cropper_1752818166728.jpg_large.jpeg",
                 tags: ["Basketball", "Public"],
                 currentUser: widget.currentUser,
               ),
+              ],
 
               SizedBox(height: 100),
             ],
@@ -860,8 +1148,9 @@ class FeatureCard extends StatelessWidget {
   final int oneHourPrice;
   final int twoHourPrice;
   final String imageurl;
-  final String location;
   final String rating;
+  final FieldLocationData locationData;
+  final String distanceLabel;
   final UserModel currentUser;
 
   const FeatureCard({
@@ -872,8 +1161,9 @@ class FeatureCard extends StatelessWidget {
     required this.oneHourPrice,
     required this.twoHourPrice,
     required this.imageurl,
-    required this.location,
     required this.rating,
+    required this.locationData,
+    required this.distanceLabel,
     required this.currentUser,
   });
 
@@ -906,12 +1196,15 @@ class FeatureCard extends StatelessWidget {
             pageBuilder: (context, animation, secondaryAnimation) =>
                 DetailBooking(
               namaLapangan: title,
-              lokasi: location,
+              lokasi: locationData.shortLocation,
               rating: double.parse(rating),
               gambar: imageurl,
               harga: price,
               harga1Jam: oneHourPrice,
               harga2Jam: twoHourPrice,
+              fullAddress: locationData.fullAddress,
+              latitude: locationData.latitude,
+              longitude: locationData.longitude,
               currentUser: currentUser,
             ),
             transitionDuration: Duration.zero,
@@ -949,9 +1242,27 @@ class FeatureCard extends StatelessWidget {
             const SizedBox(height: 5),
             Row(
               children: [
-                Text(location, style: TextStyle(color: mutedColor)),
+                Text(
+                  locationData.shortLocation,
+                  style: TextStyle(color: mutedColor),
+                ),
                 const Spacer(),
                 Icon(Icons.location_on_outlined, color: mutedColor),
+              ],
+            ),
+            const SizedBox(height: 5),
+            Row(
+              children: [
+                Icon(Icons.near_me_rounded, color: mutedColor, size: 16),
+                const SizedBox(width: 6),
+                Text(
+                  distanceLabel,
+                  style: TextStyle(
+                    color: mutedColor,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 5),
@@ -1019,6 +1330,7 @@ class NearbyCard extends StatelessWidget {
   final String distance;
   final String rating;
   final String imageUrl;
+  final FieldLocationData locationData;
   final List<String> tags;
   final UserModel currentUser;
 
@@ -1031,6 +1343,7 @@ class NearbyCard extends StatelessWidget {
     required this.distance,
     required this.rating,
     required this.imageUrl,
+    required this.locationData,
     required this.tags,
     required this.currentUser,
   });
@@ -1114,12 +1427,15 @@ class NearbyCard extends StatelessWidget {
                                 (context, animation, secondaryAnimation) =>
                                     DetailBooking(
                               namaLapangan: title,
-                              lokasi: distance,
+                              lokasi: locationData.shortLocation,
                               rating: double.parse(rating),
                               gambar: imageUrl,
                               harga: price,
                               harga1Jam: oneHourPrice,
                               harga2Jam: twoHourPrice,
+                              fullAddress: locationData.fullAddress,
+                              latitude: locationData.latitude,
+                              longitude: locationData.longitude,
                               currentUser: currentUser,
                             ),
                             transitionDuration: Duration.zero,
@@ -1150,6 +1466,15 @@ class NearbyCard extends StatelessWidget {
                     SizedBox(width: 3),
                     Text(rating, style: TextStyle(color: mutedColor)),
                   ],
+                ),
+                SizedBox(height: 6),
+                Text(
+                  locationData.shortLocation,
+                  style: TextStyle(
+                    color: mutedColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 SizedBox(height: 6),
                 Wrap(

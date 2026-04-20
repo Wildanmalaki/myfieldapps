@@ -1,4 +1,5 @@
 import 'package:MyField/database/database_helper.dart';
+import 'package:MyField/firebase_options.dart';
 import 'package:MyField/models/user_model.dart';
 import 'package:MyField/views/pendaftaran_page.dart';
 import 'package:MyField/views/settings_page.dart';
@@ -16,6 +17,8 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPage extends State<LoginPage> {
   static bool _googleInitialized = false;
+  static const String _androidServerClientId =
+      '166810882548-hq6759ospuhjmcfknrv9cnkegjit8quv.apps.googleusercontent.com';
 
   final Color bgColor = const Color(0xFFF5F7FB);
   final Color accentColor = const Color(0xFF3A7BFF);
@@ -88,7 +91,11 @@ class _LoginPage extends State<LoginPage> {
     try {
       final googleSignIn = GoogleSignIn.instance;
       if (!_googleInitialized) {
-        await googleSignIn.initialize();
+        await googleSignIn.initialize(
+          serverClientId: DefaultFirebaseOptions.android.appId.isNotEmpty
+              ? _androidServerClientId
+              : null,
+        );
         _googleInitialized = true;
       }
 
@@ -140,14 +147,12 @@ class _LoginPage extends State<LoginPage> {
       );
     } on GoogleSignInException catch (e) {
       if (!mounted) return;
-      final isCancelled = e.code == GoogleSignInExceptionCode.canceled ||
-          e.code == GoogleSignInExceptionCode.interrupted;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            isCancelled
+            e.code == GoogleSignInExceptionCode.canceled
                 ? "Login Google dibatalkan"
-                : "Login Google gagal: ${e.description}",
+                : "Login Google gagal: ${e.description ?? e.code.name}",
           ),
         ),
       );
