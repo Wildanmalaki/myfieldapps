@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../database/database_helper.dart';
 import '../models/field_review_model.dart';
 
+/// Halaman form tambah review lapangan.
 class AddReviewPage extends StatefulWidget {
   final String fieldName;
 
@@ -11,6 +12,7 @@ class AddReviewPage extends StatefulWidget {
   State<AddReviewPage> createState() => _AddReviewPageState();
 }
 
+/// State form tambah review.
 class _AddReviewPageState extends State<AddReviewPage> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController reviewController = TextEditingController();

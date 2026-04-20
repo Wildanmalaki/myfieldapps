@@ -4,6 +4,7 @@ import '../models/booking_model.dart';
 import '../models/user_model.dart';
 import 'payment_page.dart';
 
+/// Halaman daftar booking milik user.
 class BookingsPage extends StatefulWidget {
   final UserModel currentUser;
 
@@ -13,6 +14,7 @@ class BookingsPage extends StatefulWidget {
   State<BookingsPage> createState() => _BookingsPageState();
 }
 
+/// State yang memuat dan menampilkan riwayat booking user.
 class _BookingsPageState extends State<BookingsPage> {
   late Future<List<Booking>> bookingList;
   final Color bgColor = const Color(0xFF121824);

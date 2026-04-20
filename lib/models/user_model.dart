@@ -1,3 +1,4 @@
+/// Model data user aplikasi.
 class UserModel {
   int? id;
   String username;
@@ -17,6 +18,7 @@ class UserModel {
 
   String get displayName => username.trim().isEmpty ? email : username;
 
+  /// Mengubah object user menjadi map untuk penyimpanan database.
   Map<String, dynamic> toMap() {
     return {
       'username': username,
@@ -27,6 +29,7 @@ class UserModel {
     };
   }
 
+  /// Membaca data user dari map database.
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
       id: _asInt(map['id']),

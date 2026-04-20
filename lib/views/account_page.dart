@@ -10,6 +10,10 @@ import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 
+/// Halaman profile utama user.
+///
+/// Di sini user dapat mengganti nama profile, mengganti foto, melihat statistik,
+/// dan melihat riwayat booking.
 class AccountPage extends StatefulWidget {
   final UserModel currentUser;
 
@@ -19,6 +23,7 @@ class AccountPage extends StatefulWidget {
   State<AccountPage> createState() => _AccountPageState();
 }
 
+/// State profile yang menangani load data, edit nama, dan upload foto.
 class _AccountPageState extends State<AccountPage> {
   final ImagePicker _picker = ImagePicker();
   bool _isUploadingPhoto = false;
@@ -86,6 +91,7 @@ class _AccountPageState extends State<AccountPage> {
     _loadProfileData();
   }
 
+  /// Mengambil ulang profile user dan history booking yang terkait.
   Future<void> _loadProfileData() async {
     setState(() {
       _isLoadingBookings = true;
@@ -543,6 +549,7 @@ class _AccountPageState extends State<AccountPage> {
     }
   }
 
+  /// Menyegarkan data user terbaru dari database.
   Future<void> _refreshProfileFromDatabase() async {
     final userId = widget.currentUser.id;
     if (userId == null) return;
@@ -568,6 +575,7 @@ class _AccountPageState extends State<AccountPage> {
     }
   }
 
+  /// Menampilkan dialog untuk mengganti nama profile.
   Future<void> _showEditProfileDialog() async {
     final userId = widget.currentUser.id;
     if (userId == null) {
@@ -687,6 +695,7 @@ class _AccountPageState extends State<AccountPage> {
     }
   }
 
+  /// Memilih, crop, lalu menyimpan foto profile baru.
   Future<void> _changeProfilePhoto() async {
     if (widget.currentUser.id == null) {
       _showMessage('User belum valid untuk upload foto');
@@ -775,6 +784,7 @@ class _AccountPageState extends State<AccountPage> {
     }
   }
 
+  /// Helper untuk menampilkan pesan singkat ke user.
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),

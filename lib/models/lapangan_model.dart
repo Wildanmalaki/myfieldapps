@@ -1,3 +1,4 @@
+/// Model sederhana untuk data lapangan.
 class Lapangan {
   final String nama;
   final String lokasi;

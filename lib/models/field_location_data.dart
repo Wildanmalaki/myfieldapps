@@ -1,3 +1,4 @@
+/// Data lokasi lapangan, termasuk alamat dan koordinat.
 class FieldLocationData {
   final String fieldName;
   final String shortLocation;
@@ -24,6 +25,9 @@ class FieldLocationData {
   }
 }
 
+/// Registry statis lokasi lapangan.
+///
+/// Dipakai untuk alamat lapangan, Google Maps, dan hitung jarak user.
 class FieldLocationRegistry {
   static const Map<String, FieldLocationData> byName = {
     'Dekings Arena': FieldLocationData(

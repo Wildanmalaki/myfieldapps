@@ -1,3 +1,7 @@
+/// Model event versi lama.
+///
+/// Masih tersisa untuk kompatibilitas lama, tetapi `EventModel`
+/// adalah model yang lebih lengkap untuk pengembangan berikutnya.
 class Event {
   int? id;
   String title;

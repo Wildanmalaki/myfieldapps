@@ -1,6 +1,7 @@
 import 'package:MyField/views/login_page.dart';
 import 'package:flutter/material.dart';
 
+/// Halaman pembuka aplikasi sebelum user menuju login.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -8,6 +9,7 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenTugas10State();
 }
 
+/// State splash screen yang mengatur durasi tampil dan navigasi berikutnya.
 class _SplashScreenTugas10State extends State<SplashScreen> {
   @override
   void initState() {

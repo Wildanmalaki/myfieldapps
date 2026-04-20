@@ -2,6 +2,7 @@ import 'package:MyField/database/database_helper.dart';
 import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 
+/// Halaman pendaftaran user baru.
 class PendaftaranUser extends StatefulWidget {
   const PendaftaranUser({super.key});
 
@@ -9,6 +10,7 @@ class PendaftaranUser extends StatefulWidget {
   State<PendaftaranUser> createState() => _PendaftaranUserState();
 }
 
+/// State form registrasi user.
 class _PendaftaranUserState extends State<PendaftaranUser> {
   final Color bgColor = const Color(0xFFF4F7FB);
   final Color cardColor = Colors.white;

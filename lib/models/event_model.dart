@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+/// Model utama event komunitas.
 class EventModel {
   int? id;
   String title;
@@ -31,6 +32,7 @@ class EventModel {
     this.expireAt,
   });
 
+  /// Mengubah event menjadi map agar bisa disimpan ke database.
   Map<String, dynamic> toMap() {
     return {
       'title': title,
@@ -49,6 +51,7 @@ class EventModel {
     };
   }
 
+  /// Membaca event dari map database.
   factory EventModel.fromMap(Map<String, dynamic> map) {
     return EventModel(
       id: _asInt(map['id']),
@@ -139,6 +142,7 @@ class EventModel {
   }
 }
 
+/// Model peserta event komunitas.
 class EventParticipant {
   final int? userId;
   final String name;
@@ -156,6 +160,7 @@ class EventParticipant {
     this.joinedAt = '',
   });
 
+  /// Mengubah data peserta menjadi map.
   Map<String, dynamic> toMap() {
     return {
       'userId': userId,
@@ -167,6 +172,7 @@ class EventParticipant {
     };
   }
 
+  /// Membaca peserta dari map database.
   factory EventParticipant.fromMap(Map<String, dynamic> map) {
     return EventParticipant(
       userId: EventModel._asInt(map['userId']),

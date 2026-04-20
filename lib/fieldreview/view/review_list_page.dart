@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:MyField/database/database_helper.dart';
 import 'package:MyField/fieldreview/models/field_review_model.dart';
 
+/// Halaman daftar review untuk lapangan tertentu.
 class ReviewListPage extends StatefulWidget {
   final String fieldName;
 
@@ -12,6 +13,7 @@ class ReviewListPage extends StatefulWidget {
   State<ReviewListPage> createState() => _ReviewListPageState();
 }
 
+/// State daftar review lapangan.
 class _ReviewListPageState extends State<ReviewListPage> {
 
   List<FieldReview> reviews = [];

@@ -4,6 +4,7 @@ import '../database/database_helper.dart';
 import '../models/event_model.dart';
 import '../models/user_model.dart';
 
+/// Halaman form untuk join ke event komunitas.
 class FormJoinEventPage extends StatefulWidget {
   final EventModel event;
   final UserModel currentUser;
@@ -18,6 +19,7 @@ class FormJoinEventPage extends StatefulWidget {
   State<FormJoinEventPage> createState() => _FormJoinEventPageState();
 }
 
+/// State form join event.
 class _FormJoinEventPageState extends State<FormJoinEventPage> {
   final Color primaryBlue = const Color(0xFF3B82F6);
   final TextEditingController _nameController = TextEditingController();

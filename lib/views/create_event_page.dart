@@ -10,6 +10,7 @@ import '../database/database_helper.dart';
 import '../models/event_model.dart';
 import '../models/user_model.dart';
 
+/// Halaman untuk membuat event komunitas baru.
 class CreateEventPage extends StatefulWidget {
   final UserModel currentUser;
 
@@ -19,6 +20,7 @@ class CreateEventPage extends StatefulWidget {
   State<CreateEventPage> createState() => _CreateEventPageState();
 }
 
+/// State form create event.
 class _CreateEventPageState extends State<CreateEventPage> {
   final Color bgColor = const Color(0xFF121824);
   final Color cardColor = const Color(0xFF1E2736);

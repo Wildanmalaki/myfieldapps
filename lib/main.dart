@@ -1,3 +1,7 @@
+/// Titik masuk utama aplikasi MyField.
+///
+/// File ini menginisialisasi Firebase, notification service,
+/// lalu menjalankan root widget aplikasi.
 import 'package:MyField/fieldreview/view/add_review_page.dart';
 import 'package:MyField/firebase_options.dart';
 import 'package:MyField/service/notification_service.dart';
@@ -16,6 +20,9 @@ void main() async {
   runApp(const MyApp());
 }
 
+/// Root widget aplikasi.
+///
+/// Mengatur theme, route awal, dan konfigurasi level aplikasi.
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 

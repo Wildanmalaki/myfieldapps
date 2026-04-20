@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import 'account_page.dart' as account;
 
+/// Adapter agar referensi lama ke `ProfilePage` tetap aman.
 class ProfilePage extends StatelessWidget {
   final UserModel currentUser;
 

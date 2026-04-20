@@ -6,6 +6,7 @@ import 'package:MyField/views/payment_page.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+/// Halaman detail lapangan sebelum user melakukan booking.
 class DetailBooking extends StatefulWidget {
   final String namaLapangan;
   final String lokasi;
@@ -38,6 +39,7 @@ class DetailBooking extends StatefulWidget {
   State<DetailBooking> createState() => _DetailBookingState();
 }
 
+/// State detail booking yang mengatur tanggal, jam, durasi, dan Maps.
 class _DetailBookingState extends State<DetailBooking> {
   final Color bgColor = const Color(0xFF121824);
   final Color cardColor = const Color(0xFF1E2736);
@@ -111,6 +113,7 @@ class _DetailBookingState extends State<DetailBooking> {
     });
   }
 
+  /// Membuka date picker untuk memilih tanggal booking.
   Future<void> _pickBookingDate() async {
     final today = _normalizeDate(DateTime.now());
     final pickedDate = await showDatePicker(
@@ -321,6 +324,7 @@ class _DetailBookingState extends State<DetailBooking> {
     return buffer.toString();
   }
 
+  /// Memuat daftar slot yang sudah dibooking untuk tanggal yang dipilih.
   Future<void> _loadBookedSlots() async {
     setState(() {
       _isLoadingBookedSlots = true;
@@ -633,6 +637,7 @@ class _DetailBookingState extends State<DetailBooking> {
     );
   }
 
+  /// Panel lokasi lapangan yang menampilkan alamat, koordinat, dan tombol Maps.
   Widget _buildLocationPanel(
     Color localCardColor,
     Color localTextMuted,

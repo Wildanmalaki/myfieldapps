@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
+/// Service level rendah untuk akses Firebase.
 class FirebaseService {
   FirebaseService._();
 
@@ -12,10 +13,12 @@ class FirebaseService {
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  /// Helper untuk mengambil collection Firestore.
   CollectionReference<Map<String, dynamic>> collection(String path) {
     return _firestore.collection(path);
   }
 
+  /// Upload file lalu ambil download URL dari Firebase Storage.
   Future<String> _uploadAndResolveUrl({
     required Reference ref,
     required Uint8List bytes,
@@ -45,6 +48,7 @@ class FirebaseService {
         );
   }
 
+  /// Menentukan bucket kandidat jika bucket utama gagal dipakai.
   List<String> _candidateBuckets() {
     final options = Firebase.app().options;
     final configuredBucket = options.storageBucket?.trim() ?? '';
@@ -73,6 +77,7 @@ class FirebaseService {
         .toList();
   }
 
+  /// Membuat document baru di collection tertentu.
   Future<int> createDocument({
     required String collectionPath,
     required Map<String, dynamic> data,
@@ -86,6 +91,7 @@ class FirebaseService {
     return documentId;
   }
 
+  /// Mengambil seluruh document dari collection.
   Future<List<Map<String, dynamic>>> getDocuments(
     String collectionPath, {
     String? orderBy,
@@ -101,6 +107,7 @@ class FirebaseService {
     return snapshot.docs.map((doc) => doc.data()).toList();
   }
 
+  /// Mengambil document berdasarkan beberapa field filter.
   Future<List<Map<String, dynamic>>> getDocumentsByFields({
     required String collectionPath,
     required Map<String, Object> filters,
@@ -115,6 +122,7 @@ class FirebaseService {
     return snapshot.docs.map((doc) => doc.data()).toList();
   }
 
+  /// Mengambil satu document berdasarkan satu field.
   Future<Map<String, dynamic>?> getDocumentByField({
     required String collectionPath,
     required String field,
@@ -132,6 +140,7 @@ class FirebaseService {
     return snapshot.docs.first.data();
   }
 
+  /// Mengambil satu document berdasarkan kombinasi beberapa field.
   Future<Map<String, dynamic>?> getDocumentByFields({
     required String collectionPath,
     required Map<String, Object> filters,
@@ -150,6 +159,7 @@ class FirebaseService {
     return snapshot.docs.first.data();
   }
 
+  /// Mengambil document berdasarkan id.
   Future<Map<String, dynamic>?> getDocumentById({
     required String collectionPath,
     required int id,
@@ -159,6 +169,7 @@ class FirebaseService {
     return snapshot.data();
   }
 
+  /// Menghapus document berdasarkan id.
   Future<void> deleteDocument({
     required String collectionPath,
     required int id,
@@ -166,6 +177,7 @@ class FirebaseService {
     await collection(collectionPath).doc(id.toString()).delete();
   }
 
+  /// Memperbarui document dengan merge.
   Future<void> updateDocument({
     required String collectionPath,
     required int id,
@@ -176,6 +188,7 @@ class FirebaseService {
         .set(data, SetOptions(merge: true));
   }
 
+  /// Upload foto profile user ke Firebase Storage.
   Future<String> uploadProfileImage({
     required int userId,
     required File file,

@@ -9,6 +9,7 @@ import '../models/user_model.dart';
 import 'create_event_page.dart';
 import 'form_join_event.dart';
 
+/// Halaman komunitas untuk melihat, membuat, dan join event olahraga.
 class CommunityPage extends StatefulWidget {
   final UserModel currentUser;
 
@@ -18,6 +19,7 @@ class CommunityPage extends StatefulWidget {
   State<CommunityPage> createState() => _CommunityPageState();
 }
 
+/// State komunitas yang mengelola event, filter kategori, dan aksi user.
 class _CommunityPageState extends State<CommunityPage> {
   final Color bgColor = const Color(0xFF121824);
   final Color cardColor = const Color(0xFF1E2736);
@@ -43,6 +45,7 @@ class _CommunityPageState extends State<CommunityPage> {
     loadEvents();
   }
 
+  /// Mengambil daftar event komunitas dari database.
   Future<void> loadEvents() async {
     final data = await DatabaseHelper.instance.getEvents();
     if (!mounted) return;
@@ -52,6 +55,7 @@ class _CommunityPageState extends State<CommunityPage> {
     });
   }
 
+  /// Menghapus event lalu memperbarui tampilan daftar event.
   Future<void> deleteEvent(int id) async {
     await DatabaseHelper.instance.deleteEvent(id);
     await loadEvents();

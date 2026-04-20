@@ -1,3 +1,4 @@
+/// Model review lapangan dari user.
 class FieldReview {
   final int? id;
   final String fieldName;

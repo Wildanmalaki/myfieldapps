@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login_page.dart';
 
+/// Controller global sederhana untuk theme mode aplikasi.
 class AppThemeController {
   AppThemeController._();
 
@@ -14,6 +15,7 @@ class AppThemeController {
   }
 }
 
+/// Halaman pengaturan aplikasi.
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 

@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
+/// Model internal untuk data kartu rekomendasi di home.
 class _FieldPriceData {
   final String title;
   final String priceLabel;
@@ -27,6 +28,7 @@ class _FieldPriceData {
   });
 }
 
+/// Model internal untuk data lapangan terdekat.
 class _NearbyFieldData {
   final String title;
   final String price;
@@ -51,6 +53,9 @@ class _NearbyFieldData {
   });
 }
 
+/// Halaman beranda utama aplikasi.
+///
+/// Menampilkan promo, rekomendasi lapangan, dan nearby fields.
 class HomePage extends StatefulWidget {
   final UserModel currentUser;
 
@@ -60,6 +65,7 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
+/// State home yang mengatur slider, promo, kategori, dan lokasi user.
 class _HomePageState extends State<HomePage> {
   int selectedCategory = 0;
 
@@ -286,6 +292,7 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
+  /// Membaca lokasi user untuk menghitung jarak lapangan.
   Future<void> _resolveUserLocation() async {
     if (_isResolvingLocation) return;
 
@@ -342,6 +349,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  /// Mengubah hasil jarak ke label ramah user seperti `650 m` atau `4.2 Km`.
   String _distanceLabelFor(
     FieldLocationData locationData, {
     required String fallbackDistance,
@@ -369,6 +377,7 @@ class _HomePageState extends State<HomePage> {
     return '${distanceInKm.toStringAsFixed(distanceInKm >= 10 ? 0 : 1)} Km';
   }
 
+  /// Menghasilkan jarak mentah dalam meter untuk proses sorting nearby fields.
   double _distanceMetersFor(FieldLocationData locationData) {
     final userPosition = _userPosition;
     final latitude = locationData.latitude;
@@ -386,6 +395,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  /// Mengurutkan daftar lapangan dari yang paling dekat ke paling jauh.
   List<_NearbyFieldData> get _sortedNearbyFields {
     final fields = List<_NearbyFieldData>.from(_nearbyFields);
     fields.sort(
@@ -1141,6 +1151,7 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
+/// Kartu rekomendasi lapangan pada slider home.
 class FeatureCard extends StatelessWidget {
   final bool isDark;
   final String title;
@@ -1322,6 +1333,7 @@ class _NetworkCardImage extends StatelessWidget {
   }
 }
 
+/// Kartu lapangan terdekat yang menampilkan harga, jarak, dan tag fasilitas.
 class NearbyCard extends StatelessWidget {
   final String title;
   final String price;

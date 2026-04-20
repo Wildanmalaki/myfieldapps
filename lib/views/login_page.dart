@@ -8,6 +8,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+/// Halaman login user.
+///
+/// Mendukung login email/password dan login Google.
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -15,6 +18,7 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPage();
 }
 
+/// State login yang menangani validasi form, login lokal, dan login Google.
 class _LoginPage extends State<LoginPage> {
   static bool _googleInitialized = false;
   static const String _androidServerClientId =
@@ -46,6 +50,7 @@ class _LoginPage extends State<LoginPage> {
     super.dispose();
   }
 
+  /// Login biasa menggunakan email dan password yang tersimpan di database aplikasi.
   void loginUser() async {
     final String email = emailController.text.trim();
     final String password = passwordController.text.trim();
@@ -81,6 +86,7 @@ class _LoginPage extends State<LoginPage> {
     }
   }
 
+  /// Login menggunakan Google Sign-In lalu disinkronkan ke database aplikasi.
   Future<void> loginWithGoogle() async {
     if (_isGoogleLoading) return;
 

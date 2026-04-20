@@ -5,6 +5,7 @@ import 'package:MyField/models/booking_model.dart';
 import 'package:MyField/models/user_model.dart';
 import 'package:flutter/material.dart';
 
+/// Halaman pembayaran booking.
 class PaymentPage extends StatefulWidget {
   final Booking draftBooking;
   final UserModel currentUser;
@@ -19,6 +20,7 @@ class PaymentPage extends StatefulWidget {
   State<PaymentPage> createState() => _PaymentPageState();
 }
 
+/// State pembayaran yang menangani ringkasan booking dan metode pembayaran.
 class _PaymentPageState extends State<PaymentPage> {
   final Color primaryBlue = const Color(0xFF3B82F6);
   final List<_PaymentMethodOption> _paymentMethods = const [
@@ -669,6 +671,7 @@ class _PaymentPageState extends State<PaymentPage> {
   }
 }
 
+/// Halaman invoice setelah pembayaran selesai diproses.
 class BookingInvoicePage extends StatelessWidget {
   final Booking booking;
   final String customerName;
@@ -819,6 +822,7 @@ class BookingInvoicePage extends StatelessWidget {
   }
 }
 
+/// Section tampilan invoice.
 class _InvoiceSection extends StatelessWidget {
   final String title;
   final Color cardColor;
@@ -861,6 +865,7 @@ class _InvoiceSection extends StatelessWidget {
   }
 }
 
+/// Baris kecil untuk menampilkan pasangan label dan value pada invoice.
 class _InvoiceRow extends StatelessWidget {
   final String label;
   final String value;
@@ -904,6 +909,7 @@ class _InvoiceRow extends StatelessWidget {
   }
 }
 
+/// Item timeline status pada invoice.
 class _InvoiceTimelineItem extends StatelessWidget {
   final String title;
   final String subtitle;
@@ -984,6 +990,7 @@ class _InvoiceTimelineItem extends StatelessWidget {
   }
 }
 
+/// Model internal untuk opsi metode pembayaran.
 class _PaymentMethodOption {
   final String id;
   final String title;
@@ -998,6 +1005,7 @@ class _PaymentMethodOption {
   });
 }
 
+/// Painter dummy untuk placeholder QR.
 class _DummyQrPainter extends CustomPainter {
   final int seed;
 

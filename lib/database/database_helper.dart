@@ -4,6 +4,10 @@ import 'package:MyField/models/event_model.dart';
 import 'package:MyField/models/user_model.dart';
 import 'package:MyField/service/firebase_service.dart';
 
+/// Facade data utama aplikasi.
+///
+/// File ini menghubungkan UI ke Firebase untuk data user, booking,
+/// review, dan event komunitas.
 class DatabaseHelper {
   DatabaseHelper._init();
 
@@ -15,6 +19,7 @@ class DatabaseHelper {
 
   final FirebaseService _firebaseService = FirebaseService.instance;
 
+  /// Menyimpan user baru ke collection `users`.
   Future<int> insertUser(UserModel user) {
     return _firebaseService.createDocument(
       collectionPath: _usersCollection,
@@ -23,6 +28,7 @@ class DatabaseHelper {
     );
   }
 
+  /// Login user menggunakan email dan password yang tersimpan di database.
   Future<UserModel?> loginUser(String email, String password) async {
     final result = await _firebaseService.getDocumentByFields(
       collectionPath: _usersCollection,
@@ -39,6 +45,7 @@ class DatabaseHelper {
     return UserModel.fromMap(result);
   }
 
+  /// Mengambil user berdasarkan email.
   Future<UserModel?> getUserByEmail(String email) async {
     final result = await _firebaseService.getDocumentByField(
       collectionPath: _usersCollection,
@@ -53,6 +60,7 @@ class DatabaseHelper {
     return UserModel.fromMap(result);
   }
 
+  /// Mengambil user berdasarkan id.
   Future<UserModel?> getUserById(int userId) async {
     final result = await _firebaseService.getDocumentById(
       collectionPath: _usersCollection,
@@ -66,6 +74,7 @@ class DatabaseHelper {
     return UserModel.fromMap(result);
   }
 
+  /// Memperbarui nama atau foto profile user.
   Future<void> updateUserProfile({
     required int userId,
     String? username,
@@ -89,6 +98,7 @@ class DatabaseHelper {
     );
   }
 
+  /// Memastikan user hasil login Google punya record di database aplikasi.
   Future<UserModel> ensureGoogleUser({
     required String email,
     required String username,
@@ -125,6 +135,7 @@ class DatabaseHelper {
     return user;
   }
 
+  /// Menyimpan booking baru.
   Future<int> insertBooking(Booking booking) {
     return _firebaseService.createDocument(
       collectionPath: _bookingsCollection,
@@ -133,10 +144,12 @@ class DatabaseHelper {
     );
   }
 
+  /// Mengambil seluruh booking atau booking per user.
   Future<List<Booking>> getBookings() async {
     return getBookingsByUser();
   }
 
+  /// Mengambil daftar booking milik user tertentu.
   Future<List<Booking>> getBookingsByUser([int? userId]) async {
     final result = userId == null
         ? await _firebaseService.getDocuments(_bookingsCollection)
@@ -150,6 +163,7 @@ class DatabaseHelper {
     return bookings;
   }
 
+  /// Mengambil slot booking berdasarkan lapangan dan tanggal.
   Future<List<Booking>> getBookingsByFieldAndDate({
     required String lapangan,
     required String tanggal,
@@ -167,6 +181,7 @@ class DatabaseHelper {
     return bookings;
   }
 
+  /// Menghapus booking berdasarkan id.
   Future<int> deleteBooking(int id) async {
     await _firebaseService.deleteDocument(
       collectionPath: _bookingsCollection,
@@ -175,6 +190,7 @@ class DatabaseHelper {
     return 1;
   }
 
+  /// Menyimpan review lapangan.
   Future<int> insertReview(FieldReview review) {
     return _firebaseService.createDocument(
       collectionPath: _reviewsCollection,
@@ -183,6 +199,7 @@ class DatabaseHelper {
     );
   }
 
+  /// Mengambil seluruh review.
   Future<List<FieldReview>> getReviews() async {
     final result = await _firebaseService.getDocuments(
       _reviewsCollection,
@@ -192,6 +209,7 @@ class DatabaseHelper {
     return result.map(FieldReview.fromMap).toList();
   }
 
+  /// Menghapus review berdasarkan id.
   Future<int> deleteReview(int id) async {
     await _firebaseService.deleteDocument(
       collectionPath: _reviewsCollection,
@@ -200,6 +218,7 @@ class DatabaseHelper {
     return 1;
   }
 
+  /// Menyimpan event komunitas.
   Future<int> insertEvent(EventModel event) {
     return _firebaseService.createDocument(
       collectionPath: _eventsCollection,
@@ -208,6 +227,7 @@ class DatabaseHelper {
     );
   }
 
+  /// Mengambil daftar event komunitas.
   Future<List<EventModel>> getEvents() async {
     final result = await _firebaseService.getDocuments(
       _eventsCollection,
@@ -217,6 +237,7 @@ class DatabaseHelper {
     return result.map(EventModel.fromMap).toList();
   }
 
+  /// Menghapus event komunitas.
   Future<int> deleteEvent(int id) async {
     await _firebaseService.deleteDocument(
       collectionPath: _eventsCollection,
@@ -225,6 +246,7 @@ class DatabaseHelper {
     return 1;
   }
 
+  /// Memperbarui event komunitas.
   Future<void> updateEvent(EventModel event) async {
     final eventId = event.id;
     if (eventId == null) return;

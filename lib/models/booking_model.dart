@@ -1,3 +1,4 @@
+/// Model data booking lapangan.
 class Booking {
   int? id;
   int userID;
@@ -35,6 +36,7 @@ class Booking {
     this.bookedAt = '',
   });
 
+  /// Mengubah object booking menjadi map untuk penyimpanan database.
   Map<String, dynamic> toMap() {
     return {
       'userId': userID,
@@ -55,6 +57,7 @@ class Booking {
     };
   }
 
+  /// Membaca booking dari map database.
   factory Booking.fromMap(Map<String, dynamic> map) {
     final parsedStartHour = _asInt(map['startHour']);
     final parsedEndHour = _asInt(map['endHour']);
@@ -82,6 +85,7 @@ class Booking {
     );
   }
 
+  /// Membuat salinan booking dengan field tertentu yang diperbarui.
   Booking copyWith({
     int? id,
     int? userID,

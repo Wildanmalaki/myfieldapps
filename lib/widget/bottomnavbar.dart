@@ -5,6 +5,7 @@ import '../views/community_page.dart';
 import '../views/home_page.dart';
 import '../views/account_page.dart';
 
+/// Bottom navigation utama setelah user login.
 class BottomNavbar extends StatefulWidget {
   final UserModel currentUser;
 
@@ -14,6 +15,7 @@ class BottomNavbar extends StatefulWidget {
   State<BottomNavbar> createState() => _BottomNavbarState();
 }
 
+/// State yang mengatur tab aktif dan perpindahan halaman pada bottom nav.
 class _BottomNavbarState extends State<BottomNavbar> {
   int index = 0;
 
