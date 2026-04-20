@@ -1,8 +1,29 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:MyField/views/detail_booking.dart';
 import 'package:MyField/models/user_model.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
+
+class _FieldPriceData {
+  final String title;
+  final String priceLabel;
+  final int oneHourPrice;
+  final int twoHourPrice;
+  final String imageUrl;
+  final String location;
+  final String rating;
+
+  const _FieldPriceData({
+    required this.title,
+    required this.priceLabel,
+    required this.oneHourPrice,
+    required this.twoHourPrice,
+    required this.imageUrl,
+    required this.location,
+    required this.rating,
+  });
+}
 
 class HomePage extends StatefulWidget {
   final UserModel currentUser;
@@ -19,13 +40,87 @@ class _HomePageState extends State<HomePage> {
   final PageController _pageController = PageController(viewportFraction: 0.8);
   int _currentPage = 0;
   Timer? timer;
-
+  bool _hasShownPromoDialog = false;
+  final List<_FieldPriceData> _featuredFieldCards = const [
+    _FieldPriceData(
+      title: 'Dekings Arena',
+      priceLabel: 'Rp 700.000 / 1 jam | Rp 1.500.000 / 2 jam',
+      oneHourPrice: 700000,
+      twoHourPrice: 1500000,
+      imageUrl:
+          'https://admin.saraga.id/storage/images/14572131-10154585801270699-3099495380002420769-n_1631619103.jpg',
+      location: 'Lubang Buaya',
+      rating: '4.5',
+    ),
+    _FieldPriceData(
+      title: 'Pancoran Soccer Field',
+      priceLabel: 'Rp 2.240.000 / 1 jam | Rp 3.850.000 / 2 jam',
+      oneHourPrice: 2240000,
+      twoHourPrice: 3850000,
+      imageUrl:
+          'https://gelora-public-storage.s3-ap-southeast-1.amazonaws.com/upload/public-20210216090138.jpg',
+      location: 'Jakarta Selatan',
+      rating: '4.5',
+    ),
+    _FieldPriceData(
+      title: 'Lapangan Sepakbola C',
+      priceLabel: 'Rp 1.500.000 / 1 jam | Rp 4.500.000 / 2 jam',
+      oneHourPrice: 1500000,
+      twoHourPrice: 4500000,
+      imageUrl:
+          'https://cdn0-production-images-kly.akamaized.net/zXgbXIZi79R94m7KA894EfHB1jQ=/1231x710/smart/filters:quality(75):strip_icc()/kly-media-production/medias/1707784/original/096144000_1505210611-Lapangan-C-Senayan2.jpg',
+      location: 'Senayan',
+      rating: '4.5',
+    ),
+    _FieldPriceData(
+      title: 'F7 MINISOCCER ARENA',
+      priceLabel: 'Rp 500.000 / 1 jam | Rp 1.450.000 / 2 jam',
+      oneHourPrice: 500000,
+      twoHourPrice: 1450000,
+      imageUrl:
+          'https://gelora-public-storage.s3-ap-southeast-1.amazonaws.com/upload/public-20230214134056.jpg',
+      location: 'Cilandak',
+      rating: '4.5',
+    ),
+    _FieldPriceData(
+      title: 'Social Padel House Menteng',
+      priceLabel: 'Rp 180.000 / 1 jam | Rp 400.000 / 2 jam',
+      oneHourPrice: 180000,
+      twoHourPrice: 400000,
+      imageUrl:
+          'https://images.unsplash.com/photo-1646649853703-7645147474ba?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cGFkZWx8ZW58MHx8MHx8fDA%3D',
+      location: 'Jakarta Timur',
+      rating: '4.5',
+    ),
+    _FieldPriceData(
+      title: 'BBC Bali',
+      priceLabel: 'Rp 1.000.000 / 1 jam | Rp 2.500.000 / 2 jam',
+      oneHourPrice: 1000000,
+      twoHourPrice: 2500000,
+      imageUrl:
+          'https://asset.ayo.co.id/image/venue/171835445216622.image_cropper_A9B84175-A6F2-42D6-A12D-C80E79027E1A-674-0000002CA2B49FDB_large.jpg',
+      location: 'Kota Denpasar, Bali',
+      rating: '4.5',
+    ),
+  ];
   final List<String> categories = [
     "Sepak bola",
     "Minisoccer",
     "Futsal",
     "Basket",
     "Padel",
+  ];
+  final List<Map<String, String>> _promoBanners = const [
+    {
+      'image': 'assets/images/Promo_lapangan_satu.png',
+      'title': 'Promo Booking Pagi',
+      'subtitle': 'Diskon spesial untuk slot pagi hari pilihan minggu ini.',
+    },
+    {
+      'image': 'assets/images/Promo_lapangan_2_dua.png',
+      'title': 'Weekend Flash Deal',
+      'subtitle': 'Harga lebih hemat untuk booking rame-rame di akhir pekan.',
+    },
   ];
 
   String get displayFirstName {
@@ -37,10 +132,8 @@ class _HomePageState extends State<HomePage> {
 
     final source = rawName.contains('@') ? rawName.split('@').first : rawName;
     final cleaned = source.replaceAll(RegExp(r'[._-]+'), ' ').trim();
-    final parts = cleaned
-        .split(RegExp(r'\s+'))
-        .where((part) => part.isNotEmpty)
-        .toList();
+    final parts =
+        cleaned.split(RegExp(r'\s+')).where((part) => part.isNotEmpty).toList();
 
     if (parts.isEmpty) return "Member";
 
@@ -48,31 +141,41 @@ class _HomePageState extends State<HomePage> {
     return first[0].toUpperCase() + first.substring(1).toLowerCase();
   }
 
-  ImageProvider? get profileImage {
+  Uint8List? get profileImageBytes {
     final photoUrl = widget.currentUser.photoUrl.trim();
     if (photoUrl.isEmpty) return null;
 
-    if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
-      return NetworkImage(photoUrl);
-    }
-
     try {
-      return MemoryImage(base64Decode(photoUrl));
+      final payload =
+          photoUrl.contains(',') ? photoUrl.split(',').last.trim() : photoUrl;
+      return base64Decode(payload);
     } catch (_) {
       return null;
     }
+  }
+
+  String get profileImageUrl {
+    final photoUrl = widget.currentUser.photoUrl.trim();
+    if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
+      return photoUrl;
+    }
+    return '';
   }
 
   @override
   void initState() {
     super.initState();
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _hasShownPromoDialog) return;
+      _hasShownPromoDialog = true;
+      _showPromoDialog();
+    });
+
     timer = Timer.periodic(const Duration(seconds: 4), (Timer timer) {
-      if (_currentPage < 5) {
-        _currentPage++;
-      } else {
-        _currentPage = 0;
-      }
+      if (!_pageController.hasClients || _featuredFieldCards.isEmpty) return;
+
+      _currentPage = (_currentPage + 1) % _featuredFieldCards.length;
 
       _pageController.animateToPage(
         _currentPage,
@@ -104,9 +207,8 @@ class _HomePageState extends State<HomePage> {
         : const Color(0xFFF59E0B);
     final selectedChipColor = isDark ? heroAccent : const Color(0xFF3A7BFF);
     final accentColor = isDark ? heroAccent : const Color(0xFF3A7BFF);
-    final headerPanelColor = isDark
-        ? Colors.white.withValues(alpha: 0.06)
-        : const Color(0xFFEAF1FB);
+    final headerPanelColor =
+        isDark ? Colors.white.withValues(alpha: 0.06) : const Color(0xFFEAF1FB);
     final headerIconColor = isDark ? accentColor : const Color(0xFF3A7BFF);
 
     return Scaffold(
@@ -133,16 +235,7 @@ class _HomePageState extends State<HomePage> {
                       child: CircleAvatar(
                         radius: 19,
                         backgroundColor: const Color(0xFF0B3A66),
-                        backgroundImage: profileImage,
-                        child: profileImage == null
-                            ? Text(
-                                displayFirstName[0],
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              )
-                            : null,
+                        child: _buildHeaderAvatar(),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -168,16 +261,19 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                     const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: headerPanelColor,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.notifications_none,
-                        color: headerIconColor,
-                        size: 20,
+                    GestureDetector(
+                      onTap: _showPromoDialog,
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: headerPanelColor,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.local_offer_outlined,
+                          color: headerIconColor,
+                          size: 20,
+                        ),
                       ),
                     ),
                   ],
@@ -285,6 +381,18 @@ class _HomePageState extends State<HomePage> {
 
               SizedBox(height: 30),
 
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: _buildPromoSpotlight(
+                  isDark,
+                  sectionColor,
+                  mutedColor,
+                  accentColor,
+                ),
+              ),
+
+              SizedBox(height: 28),
+
               /// TITLE
               Padding(
                 padding: EdgeInsets.all(10),
@@ -309,64 +417,27 @@ class _HomePageState extends State<HomePage> {
               /// AUTO SLIDER
               SizedBox(
                 height: 300,
-                child: PageView(
+                child: PageView.builder(
                   controller: _pageController,
-                  children: [
-                    FeatureCard(
+                  allowImplicitScrolling: true,
+                  itemCount: _featuredFieldCards.length,
+                  onPageChanged: (index) {
+                    _currentPage = index;
+                  },
+                  itemBuilder: (context, index) {
+                    final field = _featuredFieldCards[index];
+                    return FeatureCard(
+                      key: ValueKey(field.imageUrl),
                       isDark: isDark,
-                      title: "Dekings Arena",
-                      price: "Rp 700.000 - 1.500.000",
-                      imageurl:
-                          "https://admin.saraga.id/storage/images/14572131-10154585801270699-3099495380002420769-n_1631619103.jpg",
-                      location: "Lubang Buaya",
-                      rating: "4.5",
-                    ),
-                    FeatureCard(
-                      isDark: isDark,
-                      title: "Pancoran Soccer Field",
-                      price: "Rp 2.240.000 - 3.850.000",
-                      imageurl:
-                          "https://gelora-public-storage.s3-ap-southeast-1.amazonaws.com/upload/public-20210216090138.jpg",
-                      location: "Jakarta Selatan",
-                      rating: "4.5",
-                    ),
-                    FeatureCard(
-                      isDark: isDark,
-                      title: "Lapangan Sepakbola C",
-                      price: "Rp 1.500.000 - 4.500.000",
-                      imageurl:
-                          "https://cdn0-production-images-kly.akamaized.net/zXgbXIZi79R94m7KA894EfHB1jQ=/1231x710/smart/filters:quality(75):strip_icc()/kly-media-production/medias/1707784/original/096144000_1505210611-Lapangan-C-Senayan2.jpg",
-                      location: "Senayan",
-                      rating: "4.5",
-                    ),
-                    FeatureCard(
-                      isDark: isDark,
-                      title: "F7 MINISOCCER ARENA",
-                      price: "Rp 500.000 - 1.450.000",
-                      imageurl:
-                          "https://gelora-public-storage.s3-ap-southeast-1.amazonaws.com/upload/public-20230214134056.jpg",
-                      location: "Cilandak",
-                      rating: "4.5",
-                    ),
-                    FeatureCard(
-                      isDark: isDark,
-                      title: "Social Padel House Menteng",
-                      price: "Rp 180.000 - 400.000",
-                      imageurl:
-                          "https://images.unsplash.com/photo-1646649853703-7645147474ba?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cGFkZWx8ZW58MHx8MHx8fDA%3D",
-                      location: "Jakarta Timur",
-                      rating: "4.5",
-                    ),
-                    FeatureCard(
-                      isDark: isDark,
-                      title: "BBC Bali",
-                      price: "Rp 1.000.000 - 2.500.000",
-                      imageurl:
-                          "https://asset.ayo.co.id/image/venue/171835445216622.image_cropper_A9B84175-A6F2-42D6-A12D-C80E79027E1A-674-0000002CA2B49FDB_large.jpg",
-                      location: "Kota Denpasar, Bali",
-                      rating: "4.5",
-                    ),
-                  ],
+                      title: field.title,
+                      price: field.priceLabel,
+                      oneHourPrice: field.oneHourPrice,
+                      twoHourPrice: field.twoHourPrice,
+                      imageurl: field.imageUrl,
+                      location: field.location,
+                      rating: field.rating,
+                    );
+                  },
                 ),
               ),
 
@@ -394,7 +465,9 @@ class _HomePageState extends State<HomePage> {
 
               NearbyCard(
                 title: "Dekings Arena",
-                price: "Rp 1.500.000",
+                price: "Rp 750.000 / 1 jam • Rp 1.500.000 / 2 jam",
+                oneHourPrice: 750000,
+                twoHourPrice: 1500000,
                 distance: "1.9 Km",
                 rating: "4.8",
                 imageUrl:
@@ -405,7 +478,9 @@ class _HomePageState extends State<HomePage> {
 
               NearbyCard(
                 title: "Alfa Rooftop Mini Soccer Tamini Square",
-                price: "Rp 2.500.000",
+                price: "Rp 1.250.000 / 1 jam • Rp 2.500.000 / 2 jam",
+                oneHourPrice: 1250000,
+                twoHourPrice: 2500000,
                 distance: "650 m",
                 rating: "4.6",
                 imageUrl:
@@ -416,7 +491,9 @@ class _HomePageState extends State<HomePage> {
 
               NearbyCard(
                 title: "Halim Futsal Badminton",
-                price: "Rp 200.000",
+                price: "Rp 100.000 / 1 jam • Rp 200.000 / 2 jam",
+                oneHourPrice: 100000,
+                twoHourPrice: 200000,
                 distance: "2.6 Km",
                 rating: "4.2",
                 imageUrl:
@@ -426,7 +503,9 @@ class _HomePageState extends State<HomePage> {
               ),
               NearbyCard(
                 title: "Talenta Court",
-                price: "Rp 400.000",
+                price: "Rp 200.000 / 1 jam • Rp 400.000 / 2 jam",
+                oneHourPrice: 200000,
+                twoHourPrice: 400000,
                 distance: "8.9 Km",
                 rating: "4.2",
                 imageUrl:
@@ -436,7 +515,9 @@ class _HomePageState extends State<HomePage> {
               ),
               NearbyCard(
                 title: "Arena Dirgantara Mini Soccer",
-                price: "Rp 600.000",
+                price: "Rp 300.000 / 1 jam • Rp 600.000 / 2 jam",
+                oneHourPrice: 300000,
+                twoHourPrice: 600000,
                 distance: "18 Km",
                 rating: "3.9",
                 imageUrl:
@@ -452,12 +533,305 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
+  Widget _buildHeaderAvatar() {
+    if (profileImageBytes != null) {
+      return ClipOval(
+        child: Image.memory(
+          profileImageBytes!,
+          width: 38,
+          height: 38,
+          fit: BoxFit.cover,
+          gaplessPlayback: true,
+          errorBuilder: (_, __, ___) => _buildHeaderAvatarFallback(),
+        ),
+      );
+    }
+
+    if (profileImageUrl.isNotEmpty) {
+      return ClipOval(
+        child: Image.network(
+          profileImageUrl,
+          width: 38,
+          height: 38,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _buildHeaderAvatarFallback(),
+        ),
+      );
+    }
+
+    return _buildHeaderAvatarFallback();
+  }
+
+  Widget _buildHeaderAvatarFallback() {
+    return Center(
+      child: Text(
+        displayFirstName[0],
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPromoSpotlight(
+    bool isDark,
+    Color titleColor,
+    Color subtitleColor,
+    Color accentColor,
+  ) {
+    final promo = _promoBanners.first;
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: LinearGradient(
+          colors: isDark
+              ? const [Color(0xFF123A65), Color(0xFF1D4ED8)]
+              : const [Color(0xFFEAF1FB), Color(0xFFDCE8FF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: _showPromoDialog,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: Image.asset(
+                      promo['image']!,
+                      width: 82,
+                      height: 82,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.16)
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            'Promo Aktif',
+                            style: TextStyle(
+                              color: accentColor,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          promo['title']!,
+                          style: TextStyle(
+                            color: titleColor,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          promo['subtitle']!,
+                          style: TextStyle(
+                            color: subtitleColor,
+                            fontSize: 12.5,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Icon(Icons.chevron_right_rounded, color: accentColor),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showPromoDialog() async {
+    if (!mounted) return;
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDark ? const Color(0xFF0E2A47) : Colors.white;
+    final titleColor = isDark ? Colors.white : const Color(0xFF102033);
+    final subtitleColor =
+        isDark ? const Color(0xFFAFC0D4) : const Color(0xFF66758A);
+    final accentColor = isDark
+        ? const Color.fromARGB(255, 255, 205, 27)
+        : const Color(0xFF3A7BFF);
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return Dialog(
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: BorderRadius.circular(28),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Promo Lapangan',
+                            style: TextStyle(
+                              color: titleColor,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Lagi ada penawaran menarik buat booking berikutnya.',
+                            style: TextStyle(
+                              color: subtitleColor,
+                              fontSize: 13,
+                              height: 1.45,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      icon: Icon(Icons.close_rounded, color: titleColor),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                SizedBox(
+                  height: 380,
+                  child: PageView.builder(
+                    itemCount: _promoBanners.length,
+                    itemBuilder: (context, index) {
+                      final promo = _promoBanners[index];
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          right: index == _promoBanners.length - 1 ? 0 : 10,
+                        ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.04)
+                                : const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(24),
+                                  ),
+                                  child: Image.asset(
+                                    promo['image']!,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      promo['title']!,
+                                      style: TextStyle(
+                                        color: titleColor,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      promo['subtitle']!,
+                                      style: TextStyle(
+                                        color: subtitleColor,
+                                        fontSize: 13,
+                                        height: 1.45,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: accentColor,
+                      foregroundColor:
+                          isDark ? const Color(0xFF102033) : Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                    child: const Text(
+                      'Lihat Nanti',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 class FeatureCard extends StatelessWidget {
   final bool isDark;
   final String title;
   final String price;
+  final int oneHourPrice;
+  final int twoHourPrice;
   final String imageurl;
   final String location;
   final String rating;
@@ -467,6 +841,8 @@ class FeatureCard extends StatelessWidget {
     required this.isDark,
     required this.title,
     required this.price,
+    required this.oneHourPrice,
+    required this.twoHourPrice,
     required this.imageurl,
     required this.location,
     required this.rating,
@@ -492,11 +868,7 @@ class FeatureCard extends StatelessWidget {
           Expanded(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(15),
-              child: Image.network(
-                imageurl,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
+              child: _NetworkCardImage(imageUrl: imageurl),
             ),
           ),
           const SizedBox(height: 10),
@@ -530,9 +902,54 @@ class FeatureCard extends StatelessWidget {
   }
 }
 
+class _NetworkCardImage extends StatelessWidget {
+  final String imageUrl;
+
+  const _NetworkCardImage({required this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final placeholderColor =
+        isDark ? const Color(0xFF0F172A) : const Color(0xFFEAF1FB);
+    final iconColor = isDark ? Colors.white70 : const Color(0xFF64748B);
+
+    return Image.network(
+      imageUrl,
+      width: double.infinity,
+      fit: BoxFit.cover,
+      gaplessPlayback: true,
+      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+        if (wasSynchronouslyLoaded || frame != null) {
+          return AnimatedOpacity(
+            opacity: 1,
+            duration: const Duration(milliseconds: 180),
+            child: child,
+          );
+        }
+
+        return Container(
+          color: placeholderColor,
+          alignment: Alignment.center,
+          child: Icon(Icons.image_outlined, color: iconColor, size: 28),
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          color: placeholderColor,
+          alignment: Alignment.center,
+          child: Icon(Icons.broken_image_outlined, color: iconColor, size: 28),
+        );
+      },
+    );
+  }
+}
+
 class NearbyCard extends StatelessWidget {
   final String title;
   final String price;
+  final int oneHourPrice;
+  final int twoHourPrice;
   final String distance;
   final String rating;
   final String imageUrl;
@@ -543,6 +960,8 @@ class NearbyCard extends StatelessWidget {
     super.key,
     required this.title,
     required this.price,
+    required this.oneHourPrice,
+    required this.twoHourPrice,
     required this.distance,
     required this.rating,
     required this.imageUrl,
@@ -566,7 +985,16 @@ class NearbyCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          CircleAvatar(radius: 28, backgroundImage: NetworkImage(imageUrl)),
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFEAF1FB),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: _NetworkCardImage(imageUrl: imageUrl),
+          ),
           const SizedBox(width: 15),
           Expanded(
             child: Column(
@@ -604,13 +1032,15 @@ class NearbyCard extends StatelessWidget {
                             pageBuilder:
                                 (context, animation, secondaryAnimation) =>
                                     DetailBooking(
-                                      namaLapangan: title,
-                                      lokasi: distance,
-                                      rating: double.parse(rating),
-                                      gambar: imageUrl,
-                                      harga: price,
-                                      currentUser: currentUser,
-                                    ),
+                              namaLapangan: title,
+                              lokasi: distance,
+                              rating: double.parse(rating),
+                              gambar: imageUrl,
+                              harga: price,
+                              harga1Jam: oneHourPrice,
+                              harga2Jam: twoHourPrice,
+                              currentUser: currentUser,
+                            ),
                             transitionDuration: Duration.zero,
                             reverseTransitionDuration: Duration.zero,
                           ),
@@ -639,17 +1069,15 @@ class NearbyCard extends StatelessWidget {
                     return Container(
                       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? Colors.black26
-                            : const Color(0xFFE8EEF8),
+                        color:
+                            isDark ? Colors.black26 : const Color(0xFFE8EEF8),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         tag,
                         style: TextStyle(
-                          color: isDark
-                              ? Colors.white
-                              : const Color(0xFF102033),
+                          color:
+                              isDark ? Colors.white : const Color(0xFF102033),
                           fontSize: 11,
                         ),
                       ),

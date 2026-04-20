@@ -114,6 +114,23 @@ class DatabaseHelper {
     return bookings;
   }
 
+  Future<List<Booking>> getBookingsByFieldAndDate({
+    required String lapangan,
+    required String tanggal,
+  }) async {
+    final result = await _firebaseService.getDocumentsByFields(
+      collectionPath: _bookingsCollection,
+      filters: {
+        'lapangan': lapangan,
+        'tanggal': tanggal,
+      },
+    );
+
+    final bookings = result.map(Booking.fromMap).toList();
+    bookings.sort((a, b) => a.startHour.compareTo(b.startHour));
+    return bookings;
+  }
+
   Future<int> deleteBooking(int id) async {
     await _firebaseService.deleteDocument(
       collectionPath: _bookingsCollection,
@@ -170,5 +187,16 @@ class DatabaseHelper {
       id: id,
     );
     return 1;
+  }
+
+  Future<void> updateEvent(EventModel event) async {
+    final eventId = event.id;
+    if (eventId == null) return;
+
+    await _firebaseService.updateDocument(
+      collectionPath: _eventsCollection,
+      id: eventId,
+      data: event.toMap(),
+    );
   }
 }

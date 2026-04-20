@@ -1,7 +1,8 @@
-import 'package:MyField/database/database_helper.dart';
 import 'package:MyField/fieldreview/view/review_list_page.dart';
+import 'package:MyField/database/database_helper.dart';
 import 'package:MyField/models/booking_model.dart';
 import 'package:MyField/models/user_model.dart';
+import 'package:MyField/views/payment_page.dart';
 import 'package:flutter/material.dart';
 
 class DetailBooking extends StatefulWidget {
@@ -10,6 +11,8 @@ class DetailBooking extends StatefulWidget {
   final double rating;
   final String gambar;
   final String harga;
+  final int? harga1Jam;
+  final int? harga2Jam;
   final UserModel currentUser;
 
   const DetailBooking({
@@ -19,6 +22,8 @@ class DetailBooking extends StatefulWidget {
     required this.rating,
     required this.gambar,
     required this.harga,
+    this.harga1Jam,
+    this.harga2Jam,
     required this.currentUser,
   });
 
@@ -31,10 +36,14 @@ class _DetailBookingState extends State<DetailBooking> {
   final Color cardColor = const Color(0xFF1E2736);
   final Color primaryBlue = const Color(0xFF3B82F6);
   final Color textMuted = const Color(0xFF94A3B8);
+  final List<int> _durationChoices = const [1, 2, 3, 4, 5, 6];
 
   late DateTime _visibleStartDate;
   late DateTime _selectedBookingDate;
-  String selectedTime = '12:00';
+  int _selectedStartHour = 12;
+  int _selectedDurationHours = 1;
+  bool _isLoadingBookedSlots = false;
+  List<Booking> _bookedSlots = [];
 
   final List<Map<String, dynamic>> facilities = [
     {'icon': Icons.shower, 'label': 'Shower'},
@@ -44,14 +53,7 @@ class _DetailBookingState extends State<DetailBooking> {
     {'icon': Icons.wifi, 'label': 'Wi-Fi'},
   ];
 
-  final List<Map<String, dynamic>> timeSlots = List.generate(16, (index) {
-    final hour = index + 7;
-    final hourLabel = hour.toString().padLeft(2, '0');
-    return {
-      'time': '$hourLabel:00',
-      'status': 'available',
-    };
-  });
+  final List<int> timeSlots = List.generate(16, (index) => index + 7);
 
   @override
   void initState() {
@@ -59,6 +61,7 @@ class _DetailBookingState extends State<DetailBooking> {
     final today = _normalizeDate(DateTime.now());
     _visibleStartDate = today;
     _selectedBookingDate = today;
+    _loadBookedSlots();
   }
 
   List<DateTime> get dateOptions {
@@ -90,7 +93,8 @@ class _DetailBookingState extends State<DetailBooking> {
 
   void _shiftVisibleDates(int days) {
     final today = _normalizeDate(DateTime.now());
-    final nextStart = _normalizeDate(_visibleStartDate.add(Duration(days: days)));
+    final nextStart =
+        _normalizeDate(_visibleStartDate.add(Duration(days: days)));
 
     setState(() {
       _visibleStartDate = nextStart.isBefore(today) ? today : nextStart;
@@ -115,6 +119,8 @@ class _DetailBookingState extends State<DetailBooking> {
       _selectedBookingDate = _normalizeDate(pickedDate);
       _syncVisibleRangeForSelectedDate();
     });
+
+    await _loadBookedSlots();
   }
 
   String _formatMonthYear(DateTime date) {
@@ -169,6 +175,193 @@ class _DetailBookingState extends State<DetailBooking> {
     return '${weekdays[date.weekday - 1]}, ${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
+  List<int> get _parsedPricePoints {
+    if (widget.harga1Jam != null || widget.harga2Jam != null) {
+      final values = <int>[
+        if ((widget.harga1Jam ?? 0) > 0) widget.harga1Jam!,
+        if ((widget.harga2Jam ?? 0) > 0) widget.harga2Jam!,
+      ];
+      if (values.isNotEmpty) {
+        return values;
+      }
+    }
+
+    final currencyMatches = RegExp(
+      r'Rp\s*([\d.]+)',
+      caseSensitive: false,
+    ).allMatches(widget.harga).toList();
+
+    if (currencyMatches.isNotEmpty) {
+      return currencyMatches
+          .map(
+            (match) =>
+                int.tryParse(match.group(1)?.replaceAll('.', '') ?? '0') ?? 0,
+          )
+          .where((value) => value > 0)
+          .toList();
+    }
+
+    final fallbackMatch = RegExp(r'[\d.]+').firstMatch(widget.harga);
+    final fallbackValue =
+        int.tryParse(fallbackMatch?.group(0)?.replaceAll('.', '') ?? '0') ?? 0;
+    return fallbackValue > 0 ? [fallbackValue] : const [0];
+  }
+
+  int get _oneHourRate {
+    final prices = _parsedPricePoints;
+    if (prices.isEmpty) return 0;
+    return prices.first;
+  }
+
+  int get _twoHourRate {
+    final prices = _parsedPricePoints;
+    if (prices.length >= 2) {
+      return prices[1];
+    }
+    return _oneHourRate * 2;
+  }
+
+  List<int> get _availableDurationChoices {
+    final maxDuration = (24 - _selectedStartHour).clamp(1, 6);
+    return _durationChoices
+        .where((duration) => duration <= maxDuration)
+        .where((duration) => !_doesOverlapExistingBooking(_selectedStartHour, duration))
+        .toList();
+  }
+
+  int get _endHour => _selectedStartHour + _selectedDurationHours;
+
+  String get _startTimeLabel => _formatHour(_selectedStartHour);
+
+  String get _endTimeLabel => _formatHour(_endHour);
+
+  String get _bookingTimeRange => '$_startTimeLabel - $_endTimeLabel';
+
+  int get _totalPrice {
+    if (_selectedDurationHours <= 1) {
+      return _oneHourRate;
+    }
+
+    if (_selectedDurationHours == 2) {
+      return _twoHourRate;
+    }
+
+    return _twoHourRate + ((_selectedDurationHours - 2) * _oneHourRate);
+  }
+
+  String get _totalPriceLabel => 'Rp ${_formatCurrency(_totalPrice)}';
+
+  String get _pricingBenchmarkLabel {
+    return '1 jam Rp ${_formatCurrency(_oneHourRate)} | 2 jam Rp ${_formatCurrency(_twoHourRate)}';
+  }
+
+  String get _durationLabel =>
+      _selectedDurationHours == 1 ? '1 jam' : '$_selectedDurationHours jam';
+
+  String _formatHour(int hour) {
+    return '${hour.toString().padLeft(2, '0')}:00';
+  }
+
+  String _formatCurrency(int value) {
+    final digits = value.toString();
+    final buffer = StringBuffer();
+    for (var i = 0; i < digits.length; i++) {
+      final reversedIndex = digits.length - i;
+      buffer.write(digits[i]);
+      if (reversedIndex > 1 && reversedIndex % 3 == 1) {
+        buffer.write('.');
+      }
+    }
+    return buffer.toString();
+  }
+
+  Future<void> _loadBookedSlots() async {
+    setState(() {
+      _isLoadingBookedSlots = true;
+    });
+
+    final bookings = await DatabaseHelper.instance.getBookingsByFieldAndDate(
+      lapangan: widget.namaLapangan,
+      tanggal: _formatBookingDate(_selectedBookingDate),
+    );
+
+    if (!mounted) return;
+
+    final firstAvailableStartHour = _findFirstAvailableStartHour(bookings);
+    final nextDurationChoices = firstAvailableStartHour == null
+        ? const <int>[]
+        : _durationChoices
+            .where((duration) => duration <= (24 - firstAvailableStartHour).clamp(1, 6))
+            .where((duration) => !_doesOverlapWithBookings(bookings, firstAvailableStartHour, duration))
+            .toList();
+
+    setState(() {
+      _bookedSlots = bookings;
+      _isLoadingBookedSlots = false;
+
+      if (firstAvailableStartHour == null) {
+        _selectedStartHour = timeSlots.first;
+        _selectedDurationHours = 1;
+        return;
+      }
+
+      if (_isStartHourUnavailable(_selectedStartHour, bookings)) {
+        _selectedStartHour = firstAvailableStartHour;
+      }
+
+      if (!nextDurationChoices.contains(_selectedDurationHours)) {
+        _selectedDurationHours = nextDurationChoices.isNotEmpty
+            ? nextDurationChoices.first
+            : 1;
+      }
+    });
+  }
+
+  bool _doesOverlapExistingBooking(int proposedStartHour, int durationHours) {
+    return _doesOverlapWithBookings(_bookedSlots, proposedStartHour, durationHours);
+  }
+
+  bool _doesOverlapWithBookings(
+    List<Booking> bookings,
+    int proposedStartHour,
+    int durationHours,
+  ) {
+    final proposedEndHour = proposedStartHour + durationHours;
+    return bookings.any(
+      (booking) =>
+          proposedStartHour < booking.endHour &&
+          proposedEndHour > booking.startHour,
+    );
+  }
+
+  bool _isStartHourUnavailable(int startHour, [List<Booking>? bookings]) {
+    final source = bookings ?? _bookedSlots;
+    return source.any(
+      (booking) => startHour >= booking.startHour && startHour < booking.endHour,
+    );
+  }
+
+  int? _findFirstAvailableStartHour([List<Booking>? bookings]) {
+    final source = bookings ?? _bookedSlots;
+    for (final hour in timeSlots) {
+      if (!_isStartHourUnavailable(hour, source)) {
+        return hour;
+      }
+    }
+    return null;
+  }
+
+  String get _bookedSlotsLabel {
+    if (_bookedSlots.isEmpty) {
+      return 'Belum ada booking di tanggal ini. Semua slot masih tersedia.';
+    }
+
+    final ranges = _bookedSlots
+        .map((booking) => '${_formatHour(booking.startHour)} - ${_formatHour(booking.endHour)}')
+        .join(', ');
+    return 'Sudah dibooking: $ranges';
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -206,6 +399,8 @@ class _DetailBookingState extends State<DetailBooking> {
                   ),
                   const SizedBox(height: 24),
                   _buildTimeSlots(localCardColor, titleColor),
+                  const SizedBox(height: 24),
+                  _buildDurationSelector(localCardColor, localTextMuted, titleColor),
                   const SizedBox(height: 24),
                   _buildCourtRules(localCardColor, localTextMuted, titleColor),
                 ],
@@ -359,7 +554,8 @@ class _DetailBookingState extends State<DetailBooking> {
             Row(
               children: List.generate(
                 5,
-                (index) => const Icon(Icons.star, color: Colors.amber, size: 18),
+                (index) =>
+                    const Icon(Icons.star, color: Colors.amber, size: 18),
               ),
             ),
             const SizedBox(width: 8),
@@ -468,7 +664,8 @@ class _DetailBookingState extends State<DetailBooking> {
               onTap: _pickBookingDate,
               child: Row(
                 children: [
-                  Icon(Icons.calendar_month_rounded, color: primaryBlue, size: 18),
+                  Icon(Icons.calendar_month_rounded,
+                      color: primaryBlue, size: 18),
                   const SizedBox(width: 6),
                   Text(
                     _formatMonthYear(selectedBookingDate),
@@ -518,10 +715,11 @@ class _DetailBookingState extends State<DetailBooking> {
             itemBuilder: (context, index) {
               final isSelected = _isSameDate(dates[index], selectedBookingDate);
               return GestureDetector(
-                onTap: () {
+                onTap: () async {
                   setState(() {
                     _selectedBookingDate = dates[index];
                   });
+                  await _loadBookedSlots();
                 },
                 child: Container(
                   width: 60,
@@ -571,6 +769,14 @@ class _DetailBookingState extends State<DetailBooking> {
             fontWeight: FontWeight.bold,
           ),
         ),
+        const SizedBox(height: 8),
+        Text(
+          _isLoadingBookedSlots ? 'Memuat slot yang sudah dibooking...' : _bookedSlotsLabel,
+          style: TextStyle(
+            color: _bookedSlots.isEmpty ? const Color(0xFF16A34A) : textMuted,
+            fontSize: 12,
+          ),
+        ),
         const SizedBox(height: 16),
         GridView.builder(
           shrinkWrap: true,
@@ -583,18 +789,29 @@ class _DetailBookingState extends State<DetailBooking> {
           ),
           itemCount: timeSlots.length,
           itemBuilder: (context, index) {
-            final slot = timeSlots[index];
-            final isSelected = selectedTime == slot['time'];
+            final hour = timeSlots[index];
+            final isSelected = _selectedStartHour == hour;
+            final isUnavailable = _isStartHourUnavailable(hour);
+            final slotColor = isUnavailable
+                ? localCardColor.withValues(alpha: 0.45)
+                : isSelected
+                    ? primaryBlue
+                    : localCardColor;
 
             return GestureDetector(
-              onTap: () {
+              onTap: isUnavailable
+                  ? null
+                  : () {
                 setState(() {
-                  selectedTime = slot['time'];
+                  _selectedStartHour = hour;
+                  if (!_availableDurationChoices.contains(_selectedDurationHours)) {
+                    _selectedDurationHours = _availableDurationChoices.first;
+                  }
                 });
               },
               child: Container(
                 decoration: BoxDecoration(
-                  color: isSelected ? primaryBlue : localCardColor,
+                  color: slotColor,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 alignment: Alignment.center,
@@ -602,21 +819,161 @@ class _DetailBookingState extends State<DetailBooking> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      slot['time'],
+                      _formatHour(hour),
                       style: TextStyle(
-                        color: isSelected ? Colors.white : titleColor,
+                        color: isUnavailable
+                            ? titleColor.withValues(alpha: 0.45)
+                            : isSelected
+                                ? Colors.white
+                                : titleColor,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    if (isSelected) ...[
+                    if (isUnavailable) ...[
                       const SizedBox(width: 4),
-                      const Icon(Icons.check_circle, color: Colors.white, size: 14),
+                      Icon(
+                        Icons.block_rounded,
+                        color: titleColor.withValues(alpha: 0.45),
+                        size: 14,
+                      ),
+                    ] else if (isSelected) ...[
+                      const SizedBox(width: 4),
+                      const Icon(Icons.check_circle,
+                          color: Colors.white, size: 14),
                     ],
                   ],
                 ),
               ),
             );
           },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDurationSelector(
+    Color localCardColor,
+    Color localTextMuted,
+    Color titleColor,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Durasi Booking',
+          style: TextStyle(
+            color: titleColor,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Pilih lama main. Harga pakai patokan 1 jam dan 2 jam.',
+          style: TextStyle(
+            color: localTextMuted,
+            fontSize: 13,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          _pricingBenchmarkLabel,
+          style: TextStyle(
+            color: primaryBlue,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 16),
+        if (_availableDurationChoices.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: localCardColor,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Text(
+              'Jam mulai yang dipilih bentrok dengan booking lain. Silakan pilih jam lain.',
+              style: TextStyle(
+                color: titleColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          )
+        else
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: _availableDurationChoices.map((duration) {
+            final isSelected = duration == _selectedDurationHours;
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedDurationHours = duration;
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected ? primaryBlue : localCardColor,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Text(
+                  duration == 1 ? '1 Jam' : '$duration Jam',
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : titleColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 14),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: localCardColor,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Ringkasan Durasi',
+                style: TextStyle(
+                  color: titleColor,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Main $_durationLabel',
+                style: TextStyle(color: localTextMuted),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _bookingTimeRange,
+                style: TextStyle(
+                  color: titleColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _totalPriceLabel,
+                style: TextStyle(
+                  color: primaryBlue,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -710,7 +1067,7 @@ class _DetailBookingState extends State<DetailBooking> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    widget.harga,
+                    _totalPriceLabel,
                     style: TextStyle(
                       color: titleColor,
                       fontSize: 22,
@@ -719,7 +1076,7 @@ class _DetailBookingState extends State<DetailBooking> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    '/ 90min',
+                    '/ $_durationLabel',
                     style: TextStyle(color: localTextMuted, fontSize: 12),
                   ),
                 ],
@@ -728,23 +1085,43 @@ class _DetailBookingState extends State<DetailBooking> {
           ),
           ElevatedButton(
             onPressed: () async {
+              if (_availableDurationChoices.isEmpty ||
+                  _doesOverlapExistingBooking(
+                    _selectedStartHour,
+                    _selectedDurationHours,
+                  )) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Slot ini sudah dibooking user lain. Pilih jam yang masih kosong.',
+                    ),
+                  ),
+                );
+                return;
+              }
+
               final booking = Booking(
                 lapangan: widget.namaLapangan,
                 userID: widget.currentUser.id ?? 0,
                 tanggal: _formatBookingDate(selectedBookingDate),
-                waktu: selectedTime,
-                status: 'Booked',
-                harga: widget.harga,
+                waktu: _bookingTimeRange,
+                startHour: _selectedStartHour,
+                endHour: _endHour,
+                durationHours: _selectedDurationHours,
+                status: 'Menunggu Pembayaran',
+                harga: _totalPriceLabel,
               );
 
-              await DatabaseHelper.instance.insertBooking(booking);
               if (!mounted) return;
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Booking berhasil')),
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PaymentPage(
+                    draftBooking: booking,
+                    currentUser: widget.currentUser,
+                  ),
+                ),
               );
-
-              Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: primaryBlue,
@@ -756,7 +1133,7 @@ class _DetailBookingState extends State<DetailBooking> {
             child: const Row(
               children: [
                 Text(
-                  'Booking',
+                  'Lanjut Bayar',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,

@@ -1,9 +1,19 @@
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:image_picker/image_picker.dart';
+
 import '../database/database_helper.dart';
 import '../models/event_model.dart';
+import '../models/user_model.dart';
 
 class CreateEventPage extends StatefulWidget {
-  const CreateEventPage({super.key});
+  final UserModel currentUser;
+
+  const CreateEventPage({super.key, required this.currentUser});
 
   @override
   State<CreateEventPage> createState() => _CreateEventPageState();
@@ -20,8 +30,11 @@ class _CreateEventPageState extends State<CreateEventPage> {
   final date = TextEditingController();
   final time = TextEditingController();
   final players = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
 
   String? selectedSport;
+  String _eventImageBase64 = '';
+  bool _isPickingImage = false;
 
   final List<String> sports = [
     "Sepak Bola",
@@ -62,6 +75,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
     }
 
     final int playerCount = int.tryParse(players.text) ?? 0;
+    final now = DateTime.now();
 
     final EventModel event = EventModel(
       title: title.text,
@@ -70,6 +84,11 @@ class _CreateEventPageState extends State<CreateEventPage> {
       date: date.text,
       time: time.text,
       players: playerCount,
+      imageBase64: _eventImageBase64,
+      creatorName: _creatorName,
+      creatorId: widget.currentUser.id,
+      createdAt: now,
+      expireAt: now.add(const Duration(days: 30)),
     );
 
     await DatabaseHelper.instance.insertEvent(event);
@@ -119,6 +138,108 @@ class _CreateEventPageState extends State<CreateEventPage> {
     });
   }
 
+  Future<void> _pickEventImage() async {
+    if (_isPickingImage) return;
+
+    setState(() {
+      _isPickingImage = true;
+    });
+
+    try {
+      final pickedFile = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+        maxWidth: 1280,
+      );
+
+      if (pickedFile == null || !mounted) return;
+
+      CroppedFile? croppedFile;
+      try {
+        croppedFile = await ImageCropper().cropImage(
+          sourcePath: pickedFile.path,
+          compressFormat: ImageCompressFormat.jpg,
+          compressQuality: 86,
+          uiSettings: [
+            AndroidUiSettings(
+              toolbarTitle: 'Crop Foto Event',
+              toolbarColor: const Color(0xFF1D4ED8),
+              toolbarWidgetColor: Colors.white,
+              activeControlsWidgetColor: const Color(0xFF3B82F6),
+              lockAspectRatio: false,
+              aspectRatioPresets: [
+                CropAspectRatioPreset.ratio16x9,
+                CropAspectRatioPreset.original,
+                CropAspectRatioPreset.square,
+              ],
+            ),
+            IOSUiSettings(
+              title: 'Crop Foto Event',
+              aspectRatioPresets: [
+                CropAspectRatioPreset.ratio16x9,
+                CropAspectRatioPreset.original,
+                CropAspectRatioPreset.square,
+              ],
+            ),
+          ],
+        );
+      } catch (_) {
+        // Fallback ke file asli jika cropper gagal dibuka.
+      }
+
+      final imagePath = croppedFile?.path ?? pickedFile.path;
+      final bytes = await File(imagePath).readAsBytes();
+      if (bytes.length > 900000) {
+        throw Exception(
+          'Ukuran foto terlalu besar. Coba crop ulang atau pilih gambar yang lebih kecil.',
+        );
+      }
+
+      setState(() {
+        _eventImageBase64 = base64Encode(bytes);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xFFF87171),
+          content: Text('Gagal memilih foto event: $e'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isPickingImage = false;
+        });
+      }
+    }
+  }
+
+  Uint8List? get _eventImageBytes {
+    if (_eventImageBase64.trim().isEmpty) return null;
+
+    try {
+      final payload = _eventImageBase64.contains(',')
+          ? _eventImageBase64.split(',').last.trim()
+          : _eventImageBase64;
+      return base64Decode(payload);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String get _creatorName {
+    final username = widget.currentUser.username.trim();
+    if (username.isNotEmpty) {
+      return username;
+    }
+    return widget.currentUser.email.trim();
+  }
+
   InputDecoration _inputDecoration({
     required String label,
     required IconData icon,
@@ -142,9 +263,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
-        borderSide: BorderSide(
-          color: primaryBlue,
-        ),
+        borderSide: BorderSide(color: primaryBlue),
       ),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
@@ -230,7 +349,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
                       color: Colors.white,
                     ),
                   ),
-                const SizedBox(width: 16),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -243,7 +362,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Text(
                           "Isi detail event olahraga kamu agar komunitas bisa cepat lihat, tertarik, dan langsung gabung.",
                           style: TextStyle(
@@ -278,6 +397,193 @@ class _CreateEventPageState extends State<CreateEventPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: localSurfaceColor,
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: primaryBlue.withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Icon(
+                          Icons.person_outline_rounded,
+                          color: primaryBlue,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Dibuat oleh",
+                              style: TextStyle(
+                                color: localTextMuted,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _creatorName,
+                              style: TextStyle(
+                                color: titleColor,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  "Foto Event",
+                  style: TextStyle(
+                    color: titleColor,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                InkWell(
+                  borderRadius: BorderRadius.circular(22),
+                  onTap: _pickEventImage,
+                  child: Ink(
+                    height: 180,
+                    decoration: BoxDecoration(
+                      color: localSurfaceColor,
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.06),
+                      ),
+                    ),
+                    child: _eventImageBytes != null
+                        ? Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(22),
+                                child: Image.memory(
+                                  _eventImageBytes!,
+                                  fit: BoxFit.cover,
+                                  gaplessPlayback: true,
+                                ),
+                              ),
+                              Positioned(
+                                left: 12,
+                                right: 12,
+                                bottom: 12,
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: OutlinedButton.icon(
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: Colors.white,
+                                          side: BorderSide(
+                                            color: Colors.white.withValues(
+                                              alpha: 0.35,
+                                            ),
+                                          ),
+                                          backgroundColor: Colors.black
+                                              .withValues(alpha: 0.3),
+                                        ),
+                                        onPressed: _pickEventImage,
+                                        icon: const Icon(
+                                          Icons.refresh_rounded,
+                                          size: 18,
+                                        ),
+                                        label: const Text('Ganti'),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: OutlinedButton.icon(
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: const Color(
+                                            0xFFFDA4AF,
+                                          ),
+                                          side: BorderSide(
+                                            color: const Color(0xFFFDA4AF)
+                                                .withValues(alpha: 0.35),
+                                          ),
+                                          backgroundColor: Colors.black
+                                              .withValues(alpha: 0.3),
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            _eventImageBase64 = '';
+                                          });
+                                        },
+                                        icon: const Icon(
+                                          Icons.delete_outline_rounded,
+                                          size: 18,
+                                        ),
+                                        label: const Text('Hapus'),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          )
+                        : Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  color: primaryBlue.withValues(alpha: 0.14),
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                                child: _isPickingImage
+                                    ? const Padding(
+                                        padding: EdgeInsets.all(14),
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.4,
+                                          color: Color(0xFF3B82F6),
+                                        ),
+                                      )
+                                    : Icon(
+                                        Icons.add_a_photo_outlined,
+                                        color: primaryBlue,
+                                      ),
+                              ),
+                              const SizedBox(height: 14),
+                              Text(
+                                'Upload foto event',
+                                style: TextStyle(
+                                  color: titleColor,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 18),
+                                child: Text(
+                                  'Foto akan di-crop dulu dan dibatasi ukurannya agar upload tetap ringan.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: localTextMuted,
+                                    height: 1.45,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 18),
                 TextField(
                   controller: title,
                   style: TextStyle(color: titleColor),

@@ -1,6 +1,7 @@
 import 'package:MyField/database/database_helper.dart';
 import 'package:MyField/models/user_model.dart';
 import 'package:MyField/views/pendaftaran_page.dart';
+import 'package:MyField/views/settings_page.dart';
 import 'package:MyField/widget/bottomnavbar.dart';
 import 'package:flutter/material.dart';
 
@@ -12,15 +13,23 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPage extends State<LoginPage> {
-  final Color bgColor = const Color(0xFFF7FAF7);
-  final Color accentColor = const Color(0xFF148A64);
+  final Color bgColor = const Color(0xFFF5F7FB);
+  final Color accentColor = const Color(0xFF3A7BFF);
   final Color darkAccent = const Color(0xFF0F172A);
   final Color mutedText = const Color(0xFF6B7280);
   final Color titleColor = const Color(0xFF111827);
+  final Color inputFillColor = const Color(0xFFEAF1FB);
+  final Color borderColor = const Color(0xFFD9E5F5);
 
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool obscurePassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    AppThemeController.setDarkMode(false);
+  }
 
   @override
   void dispose() {
@@ -278,8 +287,8 @@ class _LoginPage extends State<LoginPage> {
       onPressed: () {},
       style: OutlinedButton.styleFrom(
         foregroundColor: darkAccent,
-        backgroundColor: const Color(0xFFFBFCFB),
-        side: const BorderSide(color: Color(0xFFE5E7EB)),
+        backgroundColor: Colors.white,
+        side: BorderSide(color: borderColor),
         padding: const EdgeInsets.symmetric(vertical: 14),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
@@ -372,15 +381,15 @@ class _LoginPage extends State<LoginPage> {
       prefixIcon: Icon(prefixIcon, color: mutedText, size: 20),
       suffixIcon: suffixIcon,
       filled: true,
-      fillColor: const Color(0xFFF4F6F4),
+      fillColor: inputFillColor,
       contentPadding: const EdgeInsets.symmetric(
         horizontal: 18,
         vertical: 16,
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(
-          color: Color(0xFFE5E7EB),
+        borderSide: BorderSide(
+          color: borderColor,
         ),
       ),
       focusedBorder: OutlineInputBorder(

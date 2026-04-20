@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../database/database_helper.dart';
 import '../models/booking_model.dart';
 import '../models/user_model.dart';
+import 'payment_page.dart';
 
 class BookingsPage extends StatefulWidget {
   final UserModel currentUser;
@@ -73,7 +74,8 @@ class _BookingsPageState extends State<BookingsPage> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 120),
               children: [
-                _buildHeader(bookings.length, localCardColor, localTextMuted, titleColor),
+                _buildHeader(bookings.length, localCardColor, localTextMuted,
+                    titleColor),
                 const SizedBox(height: 24),
                 if (bookings.isEmpty)
                   _buildMessageState(
@@ -293,7 +295,11 @@ class _BookingsPageState extends State<BookingsPage> {
                   ],
                 ),
               ),
-              _buildStatusChip(booking.status),
+              _buildStatusChip(
+                booking.paymentStatus.isEmpty
+                    ? booking.status
+                    : booking.paymentStatus,
+              ),
             ],
           ),
           const SizedBox(height: 18),
@@ -311,30 +317,122 @@ class _BookingsPageState extends State<BookingsPage> {
                 const SizedBox(height: 10),
                 _buildInfoRow(Icons.access_time_rounded, booking.waktu),
                 const SizedBox(height: 10),
+                _buildInfoRow(
+                  Icons.timelapse_rounded,
+                  booking.durationHours == 1
+                      ? '1 jam'
+                      : '${booking.durationHours} jam',
+                ),
+                const SizedBox(height: 10),
                 _buildInfoRow(Icons.payments_outlined, booking.harga),
+                if (booking.invoiceNumber.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  _buildInfoRow(
+                    Icons.receipt_long_rounded,
+                    booking.invoiceNumber,
+                  ),
+                ],
               ],
             ),
           ),
+          if (booking.paymentStatus.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.03)
+                    : const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : const Color(0xFFE2EAF5),
+                ),
+              ),
+              child: Column(
+                children: [
+                  _buildInfoRow(
+                    Icons.verified_rounded,
+                    'Status pembayaran: ${booking.paymentStatus}',
+                  ),
+                  const SizedBox(height: 10),
+                  _buildInfoRow(
+                    Icons.account_balance_wallet_outlined,
+                    booking.paymentMethod.isEmpty ? '-' : booking.paymentMethod,
+                  ),
+                  const SizedBox(height: 10),
+                  _buildInfoRow(
+                    Icons.event_available_rounded,
+                    booking.paymentDate.isEmpty ? '-' : booking.paymentDate,
+                  ),
+                  const SizedBox(height: 10),
+                  _buildInfoRow(
+                    Icons.schedule_rounded,
+                    booking.bookedAt.isEmpty ? '-' : booking.bookedAt,
+                  ),
+                  const SizedBox(height: 10),
+                  _buildInfoRow(
+                    Icons.shield_outlined,
+                    booking.paymentProofCode.isEmpty
+                        ? '-'
+                        : booking.paymentProofCode,
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            runSpacing: 8,
+            spacing: 8,
             children: [
               Text(
                 "ID Booking #${booking.id ?? '-'}",
                 style: TextStyle(color: textMutedValue, fontSize: 12),
               ),
-              TextButton.icon(
-                style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFFF87171),
-                ),
-                onPressed: () async {
-                  await DatabaseHelper.instance.deleteBooking(booking.id!);
-                  setState(() {
-                    _reloadBookings();
-                  });
-                },
-                icon: const Icon(Icons.delete_outline_rounded),
-                label: const Text("Hapus"),
+              Wrap(
+                spacing: 4,
+                runSpacing: 4,
+                children: [
+                  if (booking.invoiceNumber.isNotEmpty)
+                    TextButton.icon(
+                      style: TextButton.styleFrom(
+                        foregroundColor: primaryBlue,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => BookingInvoicePage(
+                              booking: booking,
+                              customerName: _displayName(widget.currentUser),
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.receipt_long_rounded),
+                      label: const Text("Invoice"),
+                    ),
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFFF87171),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    onPressed: () async {
+                      await DatabaseHelper.instance.deleteBooking(booking.id!);
+                      setState(() {
+                        _reloadBookings();
+                      });
+                    },
+                    icon: const Icon(Icons.delete_outline_rounded),
+                    label: const Text("Hapus"),
+                  ),
+                ],
               ),
             ],
           ),
@@ -366,20 +464,31 @@ class _BookingsPageState extends State<BookingsPage> {
   }
 
   Widget _buildStatusChip(String status) {
+    final normalizedStatus = status.trim().toLowerCase();
+    final isPaid = normalizedStatus == 'lunas' || normalizedStatus == 'booked';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFF59E0B).withValues(alpha: 0.18),
+        color: (isPaid ? const Color(0xFF10B981) : const Color(0xFFF59E0B))
+            .withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         status,
-        style: const TextStyle(
-          color: Color(0xFFFBBF24),
+        style: TextStyle(
+          color: isPaid ? const Color(0xFF34D399) : const Color(0xFFFBBF24),
           fontWeight: FontWeight.w700,
           fontSize: 12,
         ),
       ),
     );
+  }
+
+  String _displayName(UserModel user) {
+    final username = user.username.trim();
+    if (username.isNotEmpty) {
+      return username;
+    }
+    return user.email.trim();
   }
 }

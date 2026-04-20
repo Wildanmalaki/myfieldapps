@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:MyField/database/database_helper.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +22,6 @@ class _ProfilePageState extends State<ProfilePage> {
   final ImagePicker _picker = ImagePicker();
   bool _isUploadingPhoto = false;
   String _photoUrl = '';
-  int _photoRefreshKey = 0;
 
   String get displayFullName {
     final rawName = widget.currentUser.username.trim().isNotEmpty
@@ -48,7 +48,6 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     _photoUrl = widget.currentUser.photoUrl.trim();
-    _photoRefreshKey = DateTime.now().millisecondsSinceEpoch;
     _refreshProfileFromDatabase();
   }
 
@@ -104,18 +103,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     children: [
                       CircleAvatar(
                         radius: 60,
-                        backgroundColor: cardColor,
-                        backgroundImage: _buildProfileImage(),
-                        child: _photoUrl.isEmpty
-                            ? Text(
-                                displayFullName[0],
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 34,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              )
-                            : null,
+                        backgroundColor: const Color(0xFF0B3A66),
+                        child: _buildProfileAvatarContent(120),
                       ),
                       if (_isUploadingPhoto)
                         const Positioned.fill(
@@ -426,16 +415,60 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  ImageProvider? _buildProfileImage() {
-    if (_photoUrl.isEmpty) return null;
-
-    if (_photoUrl.startsWith('http://') || _photoUrl.startsWith('https://')) {
-      final separator = _photoUrl.contains('?') ? '&' : '?';
-      return NetworkImage('$_photoUrl${separator}v=$_photoRefreshKey');
+  Widget _buildProfileAvatarContent(double size) {
+    final imageBytes = _decodeBase64Image(_photoUrl);
+    if (imageBytes != null) {
+      return ClipOval(
+        child: Image.memory(
+          imageBytes,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          gaplessPlayback: true,
+          errorBuilder: (_, __, ___) => _buildAvatarFallback(),
+        ),
+      );
     }
 
+    final legacyUrl = _photoUrl.trim();
+    if (legacyUrl.startsWith('http://') || legacyUrl.startsWith('https://')) {
+      return ClipOval(
+        child: Image.network(
+          legacyUrl,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _buildAvatarFallback(),
+        ),
+      );
+    }
+
+    return _buildAvatarFallback();
+  }
+
+  Widget _buildAvatarFallback() {
+    return Center(
+      child: Text(
+        displayFullName[0],
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 34,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+
+  Uint8List? _decodeBase64Image(String value) {
+    final normalized = value.trim();
+    if (normalized.isEmpty) return null;
+
+    final payload = normalized.contains(',')
+        ? normalized.split(',').last.trim()
+        : normalized;
+
     try {
-      return MemoryImage(base64Decode(_photoUrl));
+      return base64Decode(payload);
     } catch (_) {
       return null;
     }
@@ -460,7 +493,6 @@ class _ProfilePageState extends State<ProfilePage> {
         _photoUrl = latestPhotoUrl;
         widget.currentUser.photoUrl = latestPhotoUrl;
         widget.currentUser.username = latestUsername;
-        _photoRefreshKey = DateTime.now().millisecondsSinceEpoch;
       });
     } catch (_) {
       // Keep current UI state if refresh fails.
@@ -658,7 +690,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
       setState(() {
         _photoUrl = encodedImage;
-        _photoRefreshKey = DateTime.now().millisecondsSinceEpoch;
         widget.currentUser.photoUrl = encodedImage;
       });
       await _refreshProfileFromDatabase();

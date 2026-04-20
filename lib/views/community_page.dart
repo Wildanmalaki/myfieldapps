@@ -1,11 +1,18 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import '../database/database_helper.dart';
 import '../models/event_model.dart';
+import '../models/user_model.dart';
 import 'create_event_page.dart';
+import 'form_join_event.dart';
 
 class CommunityPage extends StatefulWidget {
-  const CommunityPage({super.key});
+  final UserModel currentUser;
+
+  const CommunityPage({super.key, required this.currentUser});
 
   @override
   State<CommunityPage> createState() => _CommunityPageState();
@@ -50,6 +57,21 @@ class _CommunityPageState extends State<CommunityPage> {
     await loadEvents();
   }
 
+  Uint8List? _decodeEventImage(String value) {
+    final normalized = value.trim();
+    if (normalized.isEmpty) return null;
+
+    final payload = normalized.contains(',')
+        ? normalized.split(',').last.trim()
+        : normalized;
+
+    try {
+      return base64Decode(payload);
+    } catch (_) {
+      return null;
+    }
+  }
+
   String getImage(String sport) {
     sport = sport.toLowerCase();
 
@@ -73,11 +95,17 @@ class _CommunityPageState extends State<CommunityPage> {
   }
 
   List<EventModel> get filteredEvents {
+    final activeEvents = events.where((event) {
+      final expireAt = event.expireAt;
+      if (expireAt == null) return true;
+      return expireAt.isAfter(DateTime.now());
+    }).toList();
+
     if (selectedCategory == 'Semua olahraga') {
-      return events;
+      return activeEvents;
     }
 
-    return events
+    return activeEvents
         .where(
           (event) =>
               event.sport.toLowerCase() == selectedCategory.toLowerCase(),
@@ -120,6 +148,7 @@ class _CommunityPageState extends State<CommunityPage> {
                   localSurfaceColor,
                   localTextMuted,
                   titleColor,
+                  widget.currentUser,
                 ),
               ),
           ],
@@ -133,7 +162,7 @@ class _CommunityPageState extends State<CommunityPage> {
             context,
             PageRouteBuilder(
               pageBuilder: (_, animation, secondaryAnimation) =>
-                  const CreateEventPage(),
+                  CreateEventPage(currentUser: widget.currentUser),
               transitionDuration: const Duration(milliseconds: 180),
               reverseTransitionDuration: const Duration(milliseconds: 180),
               transitionsBuilder: (
@@ -167,11 +196,8 @@ class _CommunityPageState extends State<CommunityPage> {
     Color titleColor,
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final headerIconColor =
-        isDark ? Colors.white : const Color(0xFF3A7BFF);
-    final headerIconBg = isDark
-        ? surfaceColorValue
-        : const Color(0xFFEAF1FB);
+    final headerIconColor = isDark ? Colors.white : const Color(0xFF3A7BFF);
+    final headerIconBg = isDark ? surfaceColorValue : const Color(0xFFEAF1FB);
 
     return SafeArea(
       bottom: false,
@@ -343,8 +369,8 @@ class _CommunityPageState extends State<CommunityPage> {
                   color: isActive
                       ? Colors.transparent
                       : (isDark
-                            ? Colors.white.withValues(alpha: 0.06)
-                            : const Color(0xFFD9E5F5)),
+                          ? Colors.white.withValues(alpha: 0.06)
+                          : const Color(0xFFD9E5F5)),
                 ),
               ),
               child: Text(
@@ -442,8 +468,14 @@ class _CommunityPageState extends State<CommunityPage> {
     Color surfaceColorValue,
     Color textMutedValue,
     Color titleColor,
+    UserModel currentUser,
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currentUserId = currentUser.id;
+    final isJoined = event.participants.any(
+      (participant) => participant.userId != null && participant.userId == currentUserId,
+    );
+    final isFull = event.participants.length >= event.players;
     return Container(
       margin: const EdgeInsets.only(bottom: 18),
       decoration: BoxDecoration(
@@ -467,38 +499,10 @@ class _CommunityPageState extends State<CommunityPage> {
                 SizedBox(
                   height: 180,
                   width: double.infinity,
-                  child: Image.network(
-                    getImage(event.sport),
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) {
-                        return child;
-                      }
-
-                      return Container(
-                        color: surfaceColorValue,
-                        alignment: Alignment.center,
-                        child: CircularProgressIndicator(
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.8)
-                              : primaryBlue,
-                          strokeWidth: 2.4,
-                        ),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: surfaceColorValue,
-                        alignment: Alignment.center,
-                        child: Icon(
-                          Icons.image_not_supported_outlined,
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.6)
-                              : const Color(0xFF6B7C93),
-                          size: 34,
-                        ),
-                      );
-                    },
+                  child: _buildEventImage(
+                    event,
+                    surfaceColorValue,
+                    isDark,
                   ),
                 ),
                 Positioned.fill(
@@ -576,6 +580,29 @@ class _CommunityPageState extends State<CommunityPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
+                if (event.creatorName.trim().isNotEmpty) ...[
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.person_outline_rounded,
+                        size: 16,
+                        color: textMutedValue,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Dibuat oleh ${event.creatorName}',
+                          style: TextStyle(
+                            color: textMutedValue,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                ],
                 Text(
                   'Butuh ${event.players} pemain untuk sesi ${event.sport.toLowerCase()}.',
                   style: TextStyle(
@@ -584,6 +611,42 @@ class _CommunityPageState extends State<CommunityPage> {
                     height: 1.5,
                   ),
                 ),
+                const SizedBox(height: 10),
+                Text(
+                  '${event.participants.length}/${event.players} slot terisi',
+                  style: TextStyle(
+                    color: primaryBlue,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (event.participants.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: event.participants.take(3).map((participant) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: surfaceColorValue,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          participant.name,
+                          style: TextStyle(
+                            color: titleColor,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.all(14),
@@ -665,7 +728,9 @@ class _CommunityPageState extends State<CommunityPage> {
                     ),
                     ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryBlue,
+                        backgroundColor: isJoined
+                            ? const Color(0xFF10B981)
+                            : (isFull ? const Color(0xFF94A3B8) : primaryBlue),
                         foregroundColor: Colors.white,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(
@@ -676,9 +741,29 @@ class _CommunityPageState extends State<CommunityPage> {
                           borderRadius: BorderRadius.circular(18),
                         ),
                       ),
-                      onPressed: () {},
+                      onPressed: (isJoined || isFull)
+                          ? null
+                          : () async {
+                              final didJoin = await Navigator.push<bool>(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => FormJoinEventPage(
+                                    event: event,
+                                    currentUser: currentUser,
+                                  ),
+                                ),
+                              );
+
+                              if (didJoin == true) {
+                                await loadEvents();
+                              }
+                            },
                       icon: const Icon(Icons.sports_handball_rounded, size: 18),
-                      label: const Text('Join Event'),
+                      label: Text(
+                        isJoined
+                            ? 'Sudah Join'
+                            : (isFull ? 'Penuh' : 'Join Event'),
+                      ),
                     ),
                   ],
                 ),
@@ -709,6 +794,60 @@ class _CommunityPageState extends State<CommunityPage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildEventImage(
+    EventModel event,
+    Color surfaceColorValue,
+    bool isDark,
+  ) {
+    final eventImageBytes = _decodeEventImage(event.imageBase64);
+    if (eventImageBytes != null) {
+      return Image.memory(
+        eventImageBytes,
+        fit: BoxFit.cover,
+        gaplessPlayback: true,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildEventImageFallback(surfaceColorValue, isDark);
+        },
+      );
+    }
+
+    return Image.network(
+      getImage(event.sport),
+      fit: BoxFit.cover,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) {
+          return child;
+        }
+
+        return Container(
+          color: surfaceColorValue,
+          alignment: Alignment.center,
+          child: CircularProgressIndicator(
+            color: isDark ? Colors.white.withValues(alpha: 0.8) : primaryBlue,
+            strokeWidth: 2.4,
+          ),
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        return _buildEventImageFallback(surfaceColorValue, isDark);
+      },
+    );
+  }
+
+  Widget _buildEventImageFallback(Color surfaceColorValue, bool isDark) {
+    return Container(
+      color: surfaceColorValue,
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.image_not_supported_outlined,
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.6)
+            : const Color(0xFF6B7C93),
+        size: 34,
+      ),
     );
   }
 }

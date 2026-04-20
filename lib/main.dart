@@ -1,5 +1,6 @@
 import 'package:MyField/fieldreview/view/add_review_page.dart';
 import 'package:MyField/firebase_options.dart';
+import 'package:MyField/service/notification_service.dart';
 import 'package:MyField/views/settings_page.dart';
 import 'package:MyField/views/splash.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -10,6 +11,8 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await NotificationService.instance.initialize();
+  await NotificationService.instance.scheduleHourlyPromoNotification();
   runApp(const MyApp());
 }
 

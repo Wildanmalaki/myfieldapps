@@ -26,7 +26,7 @@ class _BottomNavbarState extends State<BottomNavbar> {
     final pages = [
       HomePage(currentUser: widget.currentUser),
       BookingsPage(currentUser: widget.currentUser),
-      CommunityPage(),
+      CommunityPage(currentUser: widget.currentUser),
       ProfilePage(currentUser: widget.currentUser),
     ];
 

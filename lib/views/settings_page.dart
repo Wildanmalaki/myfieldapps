@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'login_page.dart';
 
 class AppThemeController {
   AppThemeController._();
 
   static final ValueNotifier<ThemeMode> themeMode =
-      ValueNotifier(ThemeMode.dark);
+      ValueNotifier(ThemeMode.light);
 
   static bool get isDarkMode => themeMode.value == ThemeMode.dark;
 
@@ -181,6 +182,74 @@ class SettingsPage extends StatelessWidget {
                         'Kelola preferensi privasi dan data akun kamu.',
                         style: TextStyle(color: subtitleColor),
                       ),
+                    ),
+                    Divider(
+                      height: 1,
+                      color: dividerColor,
+                    ),
+                    ListTile(
+                      leading: const Icon(
+                        Icons.logout_rounded,
+                        color: Color(0xFFF87171),
+                      ),
+                      title: Text(
+                        'Logout',
+                        style: TextStyle(
+                          color: titleColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      subtitle: Text(
+                        'Keluar dari akun dan kembali ke halaman login.',
+                        style: TextStyle(color: subtitleColor),
+                      ),
+                      onTap: () async {
+                        final shouldLogout = await showDialog<bool>(
+                          context: context,
+                          builder: (dialogContext) => AlertDialog(
+                            backgroundColor: cardColor,
+                            title: Text(
+                              'Logout akun?',
+                              style: TextStyle(
+                                color: titleColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            content: Text(
+                              'Kamu akan keluar dari akun saat ini dan perlu login lagi untuk masuk.',
+                              style: TextStyle(color: subtitleColor),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.pop(dialogContext, false),
+                                child: Text(
+                                  'Batal',
+                                  style: TextStyle(color: subtitleColor),
+                                ),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFF87171),
+                                  foregroundColor: Colors.white,
+                                ),
+                                onPressed: () =>
+                                    Navigator.pop(dialogContext, true),
+                                child: const Text('Logout'),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (shouldLogout != true || !context.mounted) return;
+
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder: (_) => const LoginPage(),
+                          ),
+                          (route) => false,
+                        );
+                      },
                     ),
                   ],
                 ),
