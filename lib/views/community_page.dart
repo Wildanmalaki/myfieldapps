@@ -134,6 +134,8 @@ class _CommunityPageState extends State<CommunityPage> {
           children: [
             _buildHeader(localSurfaceColor, localTextMuted, titleColor),
             const SizedBox(height: 24),
+            _buildCreateEventButton(localCardColor, titleColor, isDark),
+            const SizedBox(height: 20),
             _buildCategoryList(localSurfaceColor, localTextMuted),
             const SizedBox(height: 24),
             _buildSectionTitle(displayedEvents.length, titleColor),
@@ -154,38 +156,125 @@ class _CommunityPageState extends State<CommunityPage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: null,
-        backgroundColor: primaryBlue,
-        onPressed: () async {
-          await Navigator.push(
-            context,
-            PageRouteBuilder(
-              pageBuilder: (_, animation, secondaryAnimation) =>
-                  CreateEventPage(currentUser: widget.currentUser),
-              transitionDuration: const Duration(milliseconds: 180),
-              reverseTransitionDuration: const Duration(milliseconds: 180),
-              transitionsBuilder: (
-                context,
-                animation,
-                secondaryAnimation,
-                child,
-              ) {
-                final curvedAnimation = CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeOutCubic,
-                );
+    );
+  }
 
-                return FadeTransition(
-                  opacity: curvedAnimation,
-                  child: child,
-                );
-              },
-            ),
+  Future<void> _openCreateEventPage() async {
+    await Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (_, animation, secondaryAnimation) =>
+            CreateEventPage(currentUser: widget.currentUser),
+        transitionDuration: const Duration(milliseconds: 180),
+        reverseTransitionDuration: const Duration(milliseconds: 180),
+        transitionsBuilder: (
+          context,
+          animation,
+          secondaryAnimation,
+          child,
+        ) {
+          final curvedAnimation = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
           );
-          await loadEvents();
+
+          return FadeTransition(
+            opacity: curvedAnimation,
+            child: child,
+          );
         },
-        child: const Icon(Icons.add, color: Colors.white),
+      ),
+    );
+    await loadEvents();
+  }
+
+  Widget _buildCreateEventButton(
+    Color cardColorValue,
+    Color titleColor,
+    bool isDark,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: cardColorValue,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : const Color(0xFFE2EAF5),
+        ),
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: const Color(0xFF3B82F6).withValues(alpha: 0.08),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(22),
+          onTap: _openCreateEventPage,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        primaryBlue,
+                        const Color(0xFF1D4ED8),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.edit_calendar_rounded,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Buat Event Baru',
+                        style: TextStyle(
+                          color: titleColor,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Atur jadwal main dan ajak komunitas bergabung.',
+                        style: TextStyle(
+                          color: isDark
+                              ? textMuted
+                              : const Color(0xFF66758A),
+                          fontSize: 13,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: primaryBlue,
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

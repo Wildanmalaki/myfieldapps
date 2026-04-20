@@ -685,139 +685,165 @@ class _HomePageState extends State<HomePage> {
     await showDialog<void>(
       context: context,
       builder: (dialogContext) {
+        final screenHeight = MediaQuery.of(dialogContext).size.height;
+        final dialogMaxHeight = screenHeight * 0.76;
         return Dialog(
           insetPadding:
               const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           backgroundColor: Colors.transparent,
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-            decoration: BoxDecoration(
-              color: backgroundColor,
-              borderRadius: BorderRadius.circular(28),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Promo Lapangan',
-                            style: TextStyle(
-                              color: titleColor,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: dialogMaxHeight),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+              decoration: BoxDecoration(
+                color: backgroundColor,
+                borderRadius: BorderRadius.circular(28),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Promo Lapangan',
+                              style: TextStyle(
+                                color: titleColor,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Lagi ada penawaran menarik buat booking berikutnya.',
-                            style: TextStyle(
-                              color: subtitleColor,
-                              fontSize: 13,
-                              height: 1.45,
+                            const SizedBox(height: 4),
+                            Text(
+                              'Lagi ada penawaran menarik buat booking berikutnya.',
+                              style: TextStyle(
+                                color: subtitleColor,
+                                fontSize: 13,
+                                height: 1.45,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(dialogContext),
+                        icon: Icon(Icons.close_rounded, color: titleColor),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  Flexible(
+                    child: PageView.builder(
+                      itemCount: _promoBanners.length,
+                      itemBuilder: (context, index) {
+                        final promo = _promoBanners[index];
+                        return Padding(
+                          padding: EdgeInsets.only(
+                            right: index == _promoBanners.length - 1 ? 0 : 10,
+                          ),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.04)
+                                  : const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: SingleChildScrollView(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(24),
+                                    ),
+                                    child: Container(
+                                      width: double.infinity,
+                                      constraints: const BoxConstraints(
+                                        minHeight: 320,
+                                        maxHeight: 420,
+                                      ),
+                                      color: isDark
+                                          ? const Color(0xFF102A44)
+                                          : const Color(0xFFF1F5F9),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 10,
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Image.asset(
+                                        promo['image']!,
+                                        width: double.infinity,
+                                        fit: BoxFit.contain,
+                                        alignment: Alignment.center,
+                                      ),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      16,
+                                      14,
+                                      16,
+                                      16,
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          promo['title']!,
+                                          style: TextStyle(
+                                            color: titleColor,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          promo['subtitle']!,
+                                          style: TextStyle(
+                                            color: subtitleColor,
+                                            fontSize: 13,
+                                            height: 1.45,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                    IconButton(
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
                       onPressed: () => Navigator.pop(dialogContext),
-                      icon: Icon(Icons.close_rounded, color: titleColor),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                SizedBox(
-                  height: 380,
-                  child: PageView.builder(
-                    itemCount: _promoBanners.length,
-                    itemBuilder: (context, index) {
-                      final promo = _promoBanners[index];
-                      return Padding(
-                        padding: EdgeInsets.only(
-                          right: index == _promoBanners.length - 1 ? 0 : 10,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: accentColor,
+                        foregroundColor:
+                            isDark ? const Color(0xFF102033) : Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
                         ),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? Colors.white.withValues(alpha: 0.04)
-                                : const Color(0xFFF8FAFC),
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: ClipRRect(
-                                  borderRadius: const BorderRadius.vertical(
-                                    top: Radius.circular(24),
-                                  ),
-                                  child: Image.asset(
-                                    promo['image']!,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      promo['title']!,
-                                      style: TextStyle(
-                                        color: titleColor,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      promo['subtitle']!,
-                                      style: TextStyle(
-                                        color: subtitleColor,
-                                        fontSize: 13,
-                                        height: 1.45,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(dialogContext),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: accentColor,
-                      foregroundColor:
-                          isDark ? const Color(0xFF102033) : Colors.white,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: const Text(
+                        'Lihat Nanti',
+                        style: TextStyle(fontWeight: FontWeight.w700),
                       ),
                     ),
-                    child: const Text(
-                      'Lihat Nanti',
-                      style: TextStyle(fontWeight: FontWeight.w700),
-                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
