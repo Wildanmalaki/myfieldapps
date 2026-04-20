@@ -1,10 +1,12 @@
 import java.util.Properties
 
+val flutterProjectRoot = rootProject.projectDir.parentFile
+
 val keystoreProperties = Properties().apply {
- val f = rootProject.file("key.properties")
- if (f.exists()) {
- load(f.inputStream())
- }
+    val f = flutterProjectRoot.resolve("key.properties")
+    if (f.exists()) {
+        load(f.inputStream())
+    }
 }
 
 plugins {
@@ -42,21 +44,23 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
+
     signingConfigs {
-     if (keystoreProperties.isNotEmpty()) {
+        if (keystoreProperties.isNotEmpty()) {
             create("release") {
                 keyAlias = keystoreProperties["keyAlias"] as String
                 keyPassword = keystoreProperties["keyPassword"] as String
-                storeFile = file(keystoreProperties["storeFile"] as String)
+                storeFile = flutterProjectRoot.resolve(keystoreProperties["storeFile"] as String)
                 storePassword = keystoreProperties["storePassword"] as String
             }
         }
-   
-  }
-  buildTypes {
+    }
+
+    buildTypes {
         release {
             if (signingConfigs.names.contains("release")) {
-            signingConfig = signingConfigs.getByName("release")
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 }
@@ -67,5 +71,4 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
-}
 }
