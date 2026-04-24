@@ -1,17 +1,80 @@
-# myfieldapps
+# ⚽ MyField Apps
 
-A new Flutter project.
+**MyField Apps** adalah aplikasi Flutter yang dirancang untuk membantu pengguna menemukan, melihat, dan mengelola informasi seputar lapangan olahraga.  
+Aplikasi ini dibuat dengan tampilan mobile-friendly, animasi modern, serta fitur pendukung seperti review lapangan, penyimpanan data lokal, dan pengelolaan gambar.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## 📌 Tentang Project
 
-A few resources to get you started if this is your first Flutter project:
+MyField Apps merupakan project aplikasi berbasis **Flutter** yang dapat dijalankan di berbagai platform, seperti Android, iOS, Web, Windows, macOS, dan Linux.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+Aplikasi ini cocok digunakan sebagai sistem sederhana untuk menampilkan informasi lapangan, memberikan review, serta menyimpan data secara lokal menggunakan database SQLite.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+---
+
+## ✨ Fitur Utama
+
+- 🏟️ **Informasi Lapangan**  
+  Menampilkan data lapangan olahraga yang dapat dilihat oleh pengguna.
+
+- ⭐ **Review Lapangan**  
+  Pengguna dapat menambahkan review atau ulasan terhadap lapangan tertentu.
+
+- 🖼️ **Upload / Pilih Gambar**  
+  Mendukung pemilihan gambar menggunakan package `image_picker`.
+
+- 💾 **Penyimpanan Lokal**  
+  Menggunakan `sqflite` dan `path_provider` untuk menyimpan data secara lokal di perangkat.
+
+- 🎬 **Animasi Interaktif**  
+  Menggunakan `lottie` dan `animate_do` agar tampilan aplikasi lebih menarik.
+
+- 🎨 **Custom App Icon**  
+  Menggunakan `flutter_launcher_icons` untuk mengatur ikon aplikasi.
+
+- 📱 **Multi-platform**  
+  Dapat dijalankan di Android, iOS, Web, Windows, macOS, dan Linux.
+
+---
+
+## 🛠️ Teknologi yang Digunakan
+
+Project ini dibangun menggunakan:
+
+- **Flutter**
+- **Dart**
+- **Sqflite**
+- **Path Provider**
+- **Image Picker**
+- **Shared Preferences**
+- **Lottie**
+- **Animate Do**
+- **Flutter Launcher Icons**
+- **Cupertino Icons**
+
+---
+
+## 📁 Struktur Folder
+
+```bash
+myfieldapps/
+├── android/
+├── assets/
+│   ├── images/
+│   └── icons/
+├── ios/
+├── lib/
+│   ├── main.dart
+│   ├── views/
+│   └── fieldreview/
+├── linux/
+├── macos/
+├── test/
+├── web/
+├── windows/
+├── analysis_options.yaml
+├── devtools_options.yaml
+├── pubspec.yaml
+├── pubspec.lock
+└── README.md
